@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:permission_handler/permission_handler.dart'; // permission_handler 임포트
 import 'dialog.dart'; // dialog.dart 파일을 임포트
 
 void main() {
@@ -50,50 +49,23 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // 위치 권한 요청 함수
-  Future<void> requestLocationPermission() async {
-    var status = await Permission.location.status;
-    if (status.isDenied) {
-      if (await Permission.location.request().isGranted) {
-        // 권한이 허용되었을 때
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('위치 권한 설정')),
-        );
-      } else {
-        // 권한이 거부되었을 때
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('위치 권한 거부')),
-        );
-      }
-    } else if (status.isGranted) {
-      // 이미 권한이 허용된 경우
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('이미 위치 권한을 승인했습니다')),
-      );
-    }
-  }
-
   @override
   void dispose() {
-    // context를 사용하지 않음
-    // 클린업 작업 필요시 여기서 처리
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: InAppWebView(
-        initialUrlRequest: URLRequest(
-          url: WebUri('http://121.142.17.86/index'),
+      body: SafeArea(  // SafeArea 위젯으로 감싸서 상태바에 겹치지 않도록 함
+        child: InAppWebView(
+          initialUrlRequest: URLRequest(
+            url: WebUri('http://121.142.17.86/index'),
+          ),
+          initialOptions: InAppWebViewGroupOptions(
+            android: AndroidInAppWebViewOptions(useHybridComposition: true),
+          ),
         ),
-        initialOptions: InAppWebViewGroupOptions(
-          android: AndroidInAppWebViewOptions(useHybridComposition: true),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => requestLocationPermission(),
-        child: const Icon(Icons.location_on),
       ),
     );
   }
