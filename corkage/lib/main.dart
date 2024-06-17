@@ -91,30 +91,33 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.photo_camera),
-            label: '라벨 인식',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: '커뮤니티',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: '마이페이지',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepPurple, // 선택된 아이템 색상
-        unselectedItemColor: Colors.grey, // 선택되지 않은 아이템 색상 설정
-        type: BottomNavigationBarType.fixed, // 모든 아이템의 크기와 색상 고정
-        onTap: _onItemTapped,
-      ),
+  items: const <BottomNavigationBarItem>[
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: '', // 라벨 비우기
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.photo_camera),
+      label: '',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.chat),
+      label: '',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      label: '',
+    ),
+  ],
+  currentIndex: _selectedIndex,
+  selectedItemColor: Color(0xFFCC3636), // 선택된 아이템 색상
+  unselectedItemColor: Colors.grey, // 선택되지 않은 아이템 색상 설정
+  type: BottomNavigationBarType.fixed, // 모든 아이템의 크기와 색상 고정
+  showSelectedLabels: false, // 선택된 아이템의 라벨 숨기기
+  showUnselectedLabels: false, // 선택되지 않은 아이템의 라벨 숨기기
+  onTap: _onItemTapped,
+),
+
     );
   }
 }
