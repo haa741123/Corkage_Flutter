@@ -1,123 +1,192 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'dialog.dart'; // dialog.dart 파일을 임포트
+import 'dart:io';
+import 'dialog.dart';  // 다이얼로그 관련 구현이 포함된 파일
 
-void main() {
-  runApp(const MyApp());
+// 메인 함수에서 사용 가능한 카메라 목록을 가져온 후 앱을 실행
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final cameras = await availableCameras();
+  runApp(MyApp(cameras: cameras));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final List<CameraDescription> cameras;
+
+  const MyApp({Key? key, required this.cameras}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter WebView Demo',
+      title: 'Flutter Camera App',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(),
+      home: MyHomePage(cameras: cameras),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  final List<CameraDescription> cameras;
+
+  const MyHomePage({Key? key, required this.cameras}) : super(key: key);
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _selectedIndex = 0; // 선택된 탭 인덱스
-
-  @override
-  void initState() {
-    super.initState();
-    // 페이지 로드 시 자동으로 다이얼로그 호출
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // 안전하게 context 사용
-      if (mounted) {
-        showBasicDialog(
-          context,
-          '모두의 잔은 위치 권한이 필요합니다',
-          '확인 버튼을 누른 뒤 위치 권한을 허용해주세요',
-        );
-      }
-    });
-  }
+  int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index; // 선택된 인덱스 업데이트
+      _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> _pages = [
+      // 첫 번째 화면: 웹 뷰 화면
+      InAppWebView(
+        initialUrlRequest: URLRequest(url: WebUri('http://121.142.17.86/index')),
+        initialOptions: InAppWebViewGroupOptions(android: AndroidInAppWebViewOptions(useHybridComposition: true)),
+      ),
+      // 두 번째 화면: 카메라 화면
+      TakePictureScreen(camera: widget.cameras.first),
+      // 세 번째 화면: 커뮤니티 화면
+      Container(
+        color: Colors.blue,
+        child: const Center(
+          child: Text('커뮤니티 화면', style: TextStyle(fontSize: 24, color: Colors.white)),
+        ),
+      ),
+      // 네 번째 화면: 마이페이지 화면
+      Container(
+        color: Colors.orange,
+        child: const Center(
+          child: Text('마이페이지 화면', style: TextStyle(fontSize: 24, color: Colors.white)),
+        ),
+      ),
+    ];
+
     return Scaffold(
       body: SafeArea(
         child: IndexedStack(
           index: _selectedIndex,
-          children: <Widget>[
-            InAppWebView(
-              initialUrlRequest: URLRequest(
-                url: WebUri('http://121.142.17.86/index'),
-              ),
-              initialOptions: InAppWebViewGroupOptions(
-                android: AndroidInAppWebViewOptions(useHybridComposition: true),
-              ),
-            ),
-            Container(
-              color: Colors.green,
-              child: const Center(
-                child: Text('라벨 인식 화면', style: TextStyle(fontSize: 24, color: Colors.white)),
-              ),
-            ),
-            Container(
-              color: Colors.blue,
-              child: const Center(
-                child: Text('커뮤니티 화면', style: TextStyle(fontSize: 24, color: Colors.white)),
-              ),
-            ),
-            Container(
-              color: Colors.orange,
-              child: const Center(
-                child: Text('마이페이지 화면', style: TextStyle(fontSize: 24, color: Colors.white)),
-              ),
-            ),
-          ],
+          children: _pages,
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-  items: const <BottomNavigationBarItem>[
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home),
-      label: '', // 라벨 비우기
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.photo_camera),
-      label: '',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.chat),
-      label: '',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person),
-      label: '',
-    ),
-  ],
-  currentIndex: _selectedIndex,
-  selectedItemColor: Color(0xFFCC3636), // 선택된 아이템 색상
-  unselectedItemColor: Colors.grey, // 선택되지 않은 아이템 색상 설정
-  type: BottomNavigationBarType.fixed, // 모든 아이템의 크기와 색상 고정
-  showSelectedLabels: false, // 선택된 아이템의 라벨 숨기기
-  showUnselectedLabels: false, // 선택되지 않은 아이템의 라벨 숨기기
-  onTap: _onItemTapped,
-),
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_camera),
+            label: 'Camera',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Community',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Color(0xFFCC3636),
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+}
 
+class TakePictureScreen extends StatefulWidget {
+  final CameraDescription camera;
+
+  const TakePictureScreen({Key? key, required this.camera}) : super(key: key);
+
+  @override
+  TakePictureScreenState createState() => TakePictureScreenState();
+}
+
+class TakePictureScreenState extends State<TakePictureScreen> {
+  late CameraController _controller;
+  late Future<void> _initializeControllerFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = CameraController(
+      widget.camera,
+      ResolutionPreset.medium,
+    );
+    _initializeControllerFuture = _controller.initialize();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Take a picture')),
+      body: FutureBuilder<void>(
+        future: _initializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              return Center(child: Text('카메라 초기화에 실패했습니다.'));
+            }
+            return Center(child: CameraPreview(_controller));
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.camera_alt),
+        onPressed: () async {
+          try {
+            await _initializeControllerFuture;
+            final image = await _controller.takePicture();
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => DisplayPictureScreen(imagePath: image.path),
+              ),
+            );
+          } catch (e) {
+            print(e);
+          }
+        },
+      ),
+    );
+  }
+}
+
+class DisplayPictureScreen extends StatelessWidget {
+  final String imagePath;
+
+  const DisplayPictureScreen({Key? key, required this.imagePath}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Display the Picture')),
+      body: Image.file(File(imagePath)),
     );
   }
 }
