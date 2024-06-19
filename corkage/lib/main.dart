@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'components/dialog.dart'; // dialog.dart 파일을 임포트합니다.
 import 'components/bottom_navigation.dart'; // bottom_navigation.dart 파일을 임포트합니다.
-import 'components/camera_screen.dart'; // 카메라 화면 파일을 임포트합니다.
+import 'pages/camera_screen.dart'; // 카메라 화면 파일을 임포트합니다.
 import 'package:camera/camera.dart'; // 카메라 패키지 임포트
+import 'pages/photo_preview_screen.dart'; // 사진 미리보기 화면 파일을 임포트합니다.
 
 // 'cameras'를 늦은 변수로 선언하여 사용 전에 초기화되도록 합니다.
 late List<CameraDescription> cameras;
@@ -28,9 +29,6 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const MyHomePage(),
-      routes: {
-        // '/camera': (context) => CameraScreen(cameras: cameras), // 이 라우트는 ModalBottomSheet 방식에서는 필요 없음
-      },
     );
   }
 }
@@ -62,10 +60,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _onItemTapped(int index) {
     if (index == 1) { // 카메라 버튼의 인덱스가 1이라고 가정합니다.
-      showModalBottomSheet(
-        context: context,
-        builder: (context) => CameraScreen(cameras: cameras),
-        isScrollControlled: true, // 필요 시 화면 전체를 차지하도록 설정
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraScreen(cameras: cameras),
+        ),
       );
     } else {
       setState(() {
@@ -89,6 +88,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 android: AndroidInAppWebViewOptions(useHybridComposition: true),
               ),
             ),
+            // 추가 탭을 위한 다른 위젯들을 여기에 추가하세요.
+            Placeholder(child: Text('여기에 두 번째 탭의 내용을 추가하세요.')),
+            Placeholder(child: Text('여기에 세 번째 탭의 내용을 추가하세요.')),
+            Placeholder(child: Text('여기에 네 번째 탭의 내용을 추가하세요.')),
           ],
         ),
       ),
