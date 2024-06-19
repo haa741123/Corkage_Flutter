@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'components/dialog.dart'; // dialog.dart 파일을 임포트합니다.
+import 'components/dialog_location.dart'; // dialog.dart 파일을 임포트합니다.
 import 'components/bottom_navigation.dart'; // bottom_navigation.dart 파일을 임포트합니다.
 import 'pages/camera_screen.dart'; // 카메라 화면 파일을 임포트합니다.
 import 'package:camera/camera.dart'; // 카메라 패키지 임포트
