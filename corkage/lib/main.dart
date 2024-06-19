@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'dialog.dart'; // dialog.dart 파일을 임포트합니다.
-import 'bottom_navigation.dart'; // bottom_navigation.dart 파일이 존재하고 BottomNavigation 위젯을 포함하고 있는지 확인하세요.
+import 'components/dialog.dart'; // dialog.dart 파일을 임포트합니다.
+import 'components/bottom_navigation.dart'; // bottom_navigation.dart 파일이 존재하고 BottomNavigation 위젯을 포함하고 있는지 확인하세요.
 
 void main() {
   runApp(const MyApp());
