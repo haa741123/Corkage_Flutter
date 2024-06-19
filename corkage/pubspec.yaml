@@ -39,7 +39,8 @@ dependencies:
   flutter_native_splash: ^2.2.16
   permission_handler: ^10.2.0
   camera: ^0.10.5+5
-
+  google_vision: ^1.2.1+1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
