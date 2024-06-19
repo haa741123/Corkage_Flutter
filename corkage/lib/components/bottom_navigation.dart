@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+
+
 class BottomNavigation extends StatefulWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
@@ -21,19 +23,19 @@ class _BottomNavigationState extends State<BottomNavigation> {
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
-          label: '',
+          label: '홈',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.photo_camera),
-          label: '',
+          label: '카메라',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.chat),
-          label: '',
+          label: '채팅',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
-          label: '',
+          label: '프로필',
         ),
       ],
       currentIndex: widget.selectedIndex,
@@ -42,7 +44,9 @@ class _BottomNavigationState extends State<BottomNavigation> {
       type: BottomNavigationBarType.fixed,
       showSelectedLabels: false,
       showUnselectedLabels: false,
-      onTap: widget.onItemTapped,
+      onTap: (index) {
+        widget.onItemTapped(index);
+      },
     );
   }
 }
