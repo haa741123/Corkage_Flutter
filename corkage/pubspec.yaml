@@ -38,10 +38,10 @@ dependencies:
   flutter_inappwebview: ^6.0.0
   flutter_native_splash: ^2.2.16
   permission_handler: ^10.2.0
-  google_vision: ^1.2.1+1
   camera:
   path_provider:
   image_picker: ^0.8.4+3
+  gcloud: ^0.8.12
   
 dev_dependencies:
   flutter_test:
