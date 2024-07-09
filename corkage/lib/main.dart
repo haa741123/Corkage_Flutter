@@ -47,7 +47,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(10.0), // AppBar의 높이를 50으로 설정
+        preferredSize: Size.fromHeight(10.0), // AppBar의 높이를 50으로 설정
         child: AppBar(
         ),
       ),
