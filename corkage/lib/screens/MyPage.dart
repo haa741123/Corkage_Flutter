@@ -4,7 +4,6 @@ import '/widgets/BottomNavigationBar.dart';
 
 class MyPage extends StatelessWidget {
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(

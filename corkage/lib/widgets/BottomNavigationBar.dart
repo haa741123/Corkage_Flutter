@@ -50,7 +50,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
         ),
       ],
       currentIndex: selectedIndex,
-      selectedItemColor: Colors.blue,
+      selectedItemColor: Colors.red, // 선택된 아이템 색상
+      unselectedItemColor: Colors.black, // 선택되지 않은 아이템 색상
     );
   }
 }
