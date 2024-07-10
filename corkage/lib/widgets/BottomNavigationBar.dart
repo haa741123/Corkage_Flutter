@@ -82,7 +82,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
       case Routes.home:
         return HomePage();
       case Routes.camera:
-        return CameraPage();
+        return CameraApp(cameras: cameras);
       case Routes.community:
         return CommunityPage();
       case Routes.myPage:

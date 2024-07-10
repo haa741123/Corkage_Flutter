@@ -5,8 +5,14 @@ import 'routes.dart';
 import 'screens/Camera.dart';
 import 'screens/MyPage.dart';
 import 'screens/Community.dart';
+import 'utils/permision.dart';
+import 'package:camera/camera.dart';
 
-void main() {
+late List<CameraDescription> cameras;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  cameras = await requestPermissions();  // 권한 요청 및 사용 가능한 카메라 목록 대기
   runApp(MyApp());
 }
 
@@ -21,7 +27,7 @@ class MyApp extends StatelessWidget {
       initialRoute: Routes.home, // 초기 경로 설정
       routes: {
         Routes.home: (context) => HomePage(),
-        Routes.camera: (context) => CameraPage(),
+        Routes.camera: (context) => CameraApp(cameras: cameras),
         Routes.myPage: (context) => MyPage(),
         Routes.community: (context) => CommunityPage(),
       },
