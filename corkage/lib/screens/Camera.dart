@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -16,6 +19,7 @@ class CameraAppState extends State<CameraApp> {
   String errorMessage = '';
   XFile? imageFile;
   bool useFlash = false; // 플래시 사용 여부를 저장할 변수
+  String extractedText = '';
 
   @override
   void initState() {
@@ -70,8 +74,54 @@ class CameraAppState extends State<CameraApp> {
       });
       // 사진을 찍은 후 플래시 끄기
       await controller.setFlashMode(FlashMode.off);
+
+      // OCR 처리
+      await _performOCR(image);
     } catch (e) {
       print('사진 촬영 오류: $e');
+    }
+  }
+
+  Future<void> _performOCR(XFile image) async {
+    try {
+      final bytes = await File(image.path).readAsBytes();
+      final decodedImage = img.decodeImage(bytes);
+
+      if (decodedImage == null) {
+        throw Exception('이미지 디코딩 실패');
+      }
+
+      final resizedImage = img.copyResize(decodedImage, width: 1024);
+      final resizedBytes = img.encodeJpg(resizedImage, quality: 70);
+
+      final img64 = base64Encode(resizedBytes);
+
+      final url = 'https://api.ocr.space/parse/image';
+      final payload = {
+        "base64Image": "data:image/jpg;base64,$img64",
+        "language": "kor"
+      };
+      final header = {"apikey": "K85191029988957"};
+
+      final response = await http.post(Uri.parse(url), body: payload, headers: header);
+
+      // 응답 출력
+      print('OCR API Response: ${response.body}');
+
+      final result = jsonDecode(response.body);
+
+      if (result['IsErroredOnProcessing'] == true) {
+        throw Exception(result['ErrorMessage'].join(', '));
+      }
+
+      setState(() {
+        extractedText = result['ParsedResults'][0]['ParsedText'] ?? '텍스트를 추출할 수 없습니다.';
+      });
+    } catch (e) {
+      print('OCR 처리 오류: $e');
+      setState(() {
+        extractedText = 'OCR 처리 중 오류가 발생했습니다.';
+      });
     }
   }
 
@@ -83,6 +133,7 @@ class CameraAppState extends State<CameraApp> {
   void _retakePicture() {
     setState(() {
       imageFile = null;
+      extractedText = '';
     });
   }
 
@@ -131,6 +182,15 @@ class CameraAppState extends State<CameraApp> {
                 Expanded(
                   flex: 2,
                   child: Image.file(File(imageFile!.path)),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(extractedText),
+                    ),
+                  ),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
