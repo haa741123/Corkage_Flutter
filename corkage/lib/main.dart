@@ -7,6 +7,7 @@ import 'screens/MyPage.dart';
 import 'screens/Community.dart';
 import 'utils/permision.dart';
 import 'package:camera/camera.dart';
+import 'package:geolocator/geolocator.dart';
 
 late List<CameraDescription> cameras;
 
@@ -42,11 +43,53 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late WebViewController _controller;
+  Position? _currentPosition;
 
   @override
   void initState() {
     super.initState();
     WebView.platform = SurfaceAndroidWebView();
+    _getCurrentLocation();
+  }
+
+  void _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print('Location services are disabled.');
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('Location permissions are denied.');
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permissions are permanently denied, we cannot request permissions.');
+      return;
+    }
+
+    Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high).then((Position position) {
+      setState(() {
+        _currentPosition = position;
+      });
+
+      // 위치 정보를 로그에 출력
+      print('Current position: ${position.latitude}, ${position.longitude}');
+
+      // 위치 정보를 웹뷰로 전달
+      _controller.runJavascript(
+          "window.userPosition = {latitude: ${position.latitude}, longitude: ${position.longitude}};");
+    }).catchError((e) {
+      print('Error getting location: $e');
+    });
   }
 
   @override
@@ -62,12 +105,24 @@ class _HomePageState extends State<HomePage> {
         javascriptMode: JavascriptMode.unrestricted,
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
+          // 위치 정보를 웹뷰로 전달
+          if (_currentPosition != null) {
+            print('WebView created with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            _controller.runJavascript(
+                "window.userPosition = {latitude: ${_currentPosition?.latitude}, longitude: ${_currentPosition?.longitude}};");
+          }
         },
         onPageStarted: (String url) {
           print('Page started loading: $url');
         },
         onPageFinished: (String url) {
           print('Page finished loading: $url');
+          // 위치 정보를 웹뷰로 전달
+          if (_currentPosition != null) {
+            print('Page finished loading with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            _controller.runJavascript(
+                "window.userPosition = {latitude: ${_currentPosition?.latitude}, longitude: ${_currentPosition?.longitude}};");
+          }
         },
         gestureNavigationEnabled: true,
       ),
