@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '/routes.dart';
 import '/widgets/BottomNavigationBar.dart';
 
-class MyPage extends StatelessWidget {
+class MyPage extends StatefulWidget {
+  @override
+  _MyPageState createState() => _MyPageState();
+}
+
+class _MyPageState extends State<MyPage> {
+  late WebViewController _controller;
+  // 필요에 따라 _currentPosition 변수를 정의하세요.
+  // Position? _currentPosition; // 위치 정보를 담기 위한 변수
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,7 +30,14 @@ class MyPage extends StatelessWidget {
           ],
         ),
       ),
-      body: Center(child: Text("마이 페이지입니다")),
+      body: WebView(
+        initialUrl: 'http://121.142.17.86:85/',
+        javascriptMode: JavascriptMode.unrestricted,
+        onWebViewCreated: (WebViewController webViewController) {
+          _controller = webViewController;
+        },
+        gestureNavigationEnabled: true,
+      ),
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: 3, // 적절한 인덱스로 설정
         onItemTapped: (index) {
