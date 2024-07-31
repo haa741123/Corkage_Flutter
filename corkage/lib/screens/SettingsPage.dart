@@ -62,7 +62,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             title: Text("광고 수신 허용"),
             subtitle: _adsAllowed && _adsAllowedTime.isNotEmpty
-                ? Text("$_adsAllowedTime에 광고 수신을 허용했습니다")
+                ? Text("$_adsAllowedTime에 광고 수신을 허용하셨습니다")
                 : null,
             trailing: Switch(
               value: _adsAllowed,
