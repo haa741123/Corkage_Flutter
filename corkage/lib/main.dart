@@ -167,10 +167,6 @@ void _setAdsConsent(bool isConsented) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(10.0), // AppBar의 높이를 50으로 설정
-        child: AppBar(),
-      ),
       body: WebView(
         initialUrl: 'http://121.142.17.86:85/',
         javascriptMode: JavascriptMode.unrestricted,
