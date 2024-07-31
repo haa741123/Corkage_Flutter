@@ -10,6 +10,7 @@ import 'screens/SettingsPage.dart';
 import 'utils/permision.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 late List<CameraDescription> cameras;
 
@@ -96,21 +97,25 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _setAdsConsent(bool isConsented) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool('adsConsent', isConsented);
+void _setAdsConsent(bool isConsented) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool('adsConsent', isConsented);
 
-    String message;
-    if (isConsented) {
-      String currentTime = DateTime.now().toString();
-      prefs.setString('adsConsentTime', currentTime);
-      message = '광고 수신을 허용했습니다: $currentTime';
-      print(message);
-    } else {
-      message = '광고 수신을 거부했습니다.';
-      print(message);
-    }
+  String message;
+  if (isConsented) {
+    String currentTime = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+    prefs.setString('adsConsentTime', currentTime);
+    message = '광고 수신을 허용했습니다: $currentTime';
+    print(message);
+  } else {
+    message = '광고 수신을 거부했습니다.';
+    print(message);
+  }
 
+  // 하단 스낵바로 알림 표시
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
     // 하단 스낵바로 알림 표시
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),

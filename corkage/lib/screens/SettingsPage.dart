@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart'; // 날짜 및 시간 포맷팅을 위한 패키지
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -30,7 +31,7 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _adsAllowed = isConsented;
       if (isConsented) {
-        _adsAllowedTime = DateTime.now().toString();
+        _adsAllowedTime = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
         prefs.setString('adsConsentTime', _adsAllowedTime);
       } else {
         _adsAllowedTime = "";
