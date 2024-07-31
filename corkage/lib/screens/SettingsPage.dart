@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart'; // 날짜 및 시간 포맷팅을 위한 패키지
+import 'package:intl/intl.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -10,7 +10,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = true;
   bool _adsAllowed = false;
-  String _adsAllowedTime = ""; // 광고 수신 허용 시간
+  String _adsAllowedTime = "";
 
   @override
   void initState() {
@@ -74,7 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             title: Text("공지사항"),
             onTap: () {
-              // 공지사항 페이지로 이동하는 코드
+              Navigator.pushNamed(context, '/notice');
             },
           ),
           ListTile(
