@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'widgets/BottomNavigationBar.dart';
 import 'routes.dart';
 import 'screens/Camera.dart';
 import 'screens/MyPage.dart';
 import 'screens/Community.dart';
+import 'screens/SettingsPage.dart';
 import 'utils/permision.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
@@ -31,6 +33,7 @@ class MyApp extends StatelessWidget {
         Routes.camera: (context) => CameraApp(cameras: cameras),
         Routes.myPage: (context) => MyPage(),
         Routes.community: (context) => CommunityPage(),
+        Routes.settings: (context) => SettingsPage(),
       },
     );
   }
@@ -50,6 +53,68 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     WebView.platform = SurfaceAndroidWebView();
     _getCurrentLocation();
+    _checkFirstLaunch(); // 앱 첫 실행 여부 체크 및 광고 수신 동의 확인
+  }
+
+  Future<void> _checkFirstLaunch() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isFirstLaunch = prefs.getBool('isFirstLaunch');
+    
+    if (isFirstLaunch == null || isFirstLaunch) {
+      // 첫 실행인 경우
+      _showAdsConsentDialog();
+      prefs.setBool('isFirstLaunch', false); // 첫 실행 이후로 설정
+    }
+  }
+
+  void _showAdsConsentDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // 사용자 동의 전 다이얼로그 닫기 방지
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('광고 수신 동의'),
+          content: Text('광고 수신을 허용하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _setAdsConsent(false);
+                Navigator.of(context).pop();
+              },
+              child: Text('거부'),
+            ),
+            TextButton(
+              onPressed: () {
+                _setAdsConsent(true);
+                Navigator.of(context).pop();
+              },
+              child: Text('허용'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _setAdsConsent(bool isConsented) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('adsConsent', isConsented);
+
+    String message;
+    if (isConsented) {
+      String currentTime = DateTime.now().toString();
+      prefs.setString('adsConsentTime', currentTime);
+      message = '광고 수신을 허용했습니다: $currentTime';
+      print(message);
+    } else {
+      message = '광고 수신을 거부했습니다.';
+      print(message);
+    }
+
+    // 하단 스낵바로 알림 표시
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _getCurrentLocation() async {
@@ -97,8 +162,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(10.0), // AppBar의 높이를 50으로 설정
-        child: AppBar(
-        ),
+        child: AppBar(),
       ),
       body: WebView(
         initialUrl: 'http://121.142.17.86:85/',
