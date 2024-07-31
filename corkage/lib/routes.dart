@@ -6,4 +6,5 @@ class Routes {
   static const String myPage = '/mypage';
   static const String community = '/community';
   static const String settings = '/settings'; 
+  static const String notice= '/notice';  
 }

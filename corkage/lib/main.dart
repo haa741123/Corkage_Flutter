@@ -7,6 +7,7 @@ import 'screens/Camera.dart';
 import 'screens/MyPage.dart';
 import 'screens/Community.dart';
 import 'screens/SettingsPage.dart';
+import 'screens/NoticePage.dart';
 import 'utils/permision.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
         Routes.myPage: (context) => MyPage(),
         Routes.community: (context) => CommunityPage(),
         Routes.settings: (context) => SettingsPage(),
+        Routes.notice: (context) => NoticePage(),
       },
     );
   }
