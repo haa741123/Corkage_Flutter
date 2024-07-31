@@ -20,6 +20,7 @@ class _MyPageState extends State<MyPage> {
         preferredSize: Size.fromHeight(50.0), // AppBar의 높이를 50으로 설정
         child: AppBar(
           title: Text("마이 페이지"),
+          automaticallyImplyLeading: false,
           actions: [
             IconButton(
               icon: Icon(Icons.settings),

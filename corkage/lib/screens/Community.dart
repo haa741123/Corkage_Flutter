@@ -10,6 +10,7 @@ class CommunityPage extends StatelessWidget {
         preferredSize: Size.fromHeight(50.0), // AppBar의 높이를 50으로 설정
         child: AppBar(
           title: Text("커뮤니티 페이지"),
+          automaticallyImplyLeading: false,
         ),
       ),
       body: Center(child: Text("커뮤니티 페이지입니다")),
