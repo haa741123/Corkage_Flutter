@@ -10,6 +10,14 @@ class MyPage extends StatelessWidget {
         preferredSize: Size.fromHeight(50.0), // AppBar의 높이를 50으로 설정
         child: AppBar(
           title: Text("마이 페이지"),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                Navigator.pushNamed(context, Routes.settings);
+              },
+            ),
+          ],
         ),
       ),
       body: Center(child: Text("마이 페이지입니다")),
