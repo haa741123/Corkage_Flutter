@@ -63,6 +63,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
       currentIndex: selectedIndex,
       selectedItemColor: Colors.red, // 선택된 아이템 색상
       unselectedItemColor: Colors.black, // 선택되지 않은 아이템 색상
+      backgroundColor: Colors.white, // 하단 바 배경색을 하얀색으로 설정
       showSelectedLabels: false, // 선택된 아이템의 라벨을 숨김
       showUnselectedLabels: false, // 선택되지 않은 아이템의 라벨을 숨김
       type: BottomNavigationBarType.fixed, // 높이가 변하지 않도록 설정
@@ -71,7 +72,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   Route _noAnimationRoute(String routeName) {
     return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => _getPage(routeName),
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          _getPage(routeName),
       transitionDuration: Duration.zero, // 전환 애니메이션 지속 시간을 0으로 설정
       reverseTransitionDuration: Duration.zero, // 뒤로 가기 애니메이션 지속 시간을 0으로 설정
     );
