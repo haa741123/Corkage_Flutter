@@ -17,7 +17,7 @@ late List<CameraDescription> cameras;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  cameras = await requestPermissions();  // 권한 요청 및 사용 가능한 카메라 목록 대기
+  cameras = await requestPermissions(); // 권한 요청 및 사용 가능한 카메라 목록 대기
   runApp(MyApp());
 }
 
@@ -62,7 +62,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _checkFirstLaunch() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? isFirstLaunch = prefs.getBool('isFirstLaunch');
-    
+
     if (isFirstLaunch == null || isFirstLaunch) {
       // 첫 실행인 경우
       _showAdsConsentDialog();
@@ -99,25 +99,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-void _setAdsConsent(bool isConsented) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setBool('adsConsent', isConsented);
+  void _setAdsConsent(bool isConsented) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool('adsConsent', isConsented);
 
-  String message;
-  if (isConsented) {
-    String currentTime = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
-    prefs.setString('adsConsentTime', currentTime);
-    message = '광고 수신을 허용했습니다: $currentTime';
-    print(message);
-  } else {
-    message = '광고 수신을 거부했습니다.';
-    print(message);
-  }
+    String message;
+    if (isConsented) {
+      String currentTime =
+          DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
+      prefs.setString('adsConsentTime', currentTime);
+      message = '광고 수신을 허용했습니다: $currentTime';
+      print(message);
+    } else {
+      message = '광고 수신을 거부했습니다.';
+      print(message);
+    }
 
-  // 하단 스낵바로 알림 표시
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message)),
-  );
     // 하단 스낵바로 알림 표시
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -144,11 +141,13 @@ void _setAdsConsent(bool isConsented) async {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print('Location permissions are permanently denied, we cannot request permissions.');
+      print(
+          'Location permissions are permanently denied, we cannot request permissions.');
       return;
     }
 
-    Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high).then((Position position) {
+    Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
+        .then((Position position) {
       setState(() {
         _currentPosition = position;
       });
@@ -174,7 +173,8 @@ void _setAdsConsent(bool isConsented) async {
           _controller = webViewController;
           // 위치 정보를 웹뷰로 전달
           if (_currentPosition != null) {
-            print('WebView created with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            print(
+                'WebView created with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
             _controller.runJavascript(
                 "window.userPosition = {latitude: ${_currentPosition?.latitude}, longitude: ${_currentPosition?.longitude}};");
           }
@@ -186,7 +186,8 @@ void _setAdsConsent(bool isConsented) async {
           print('Page finished loading: $url');
           // 위치 정보를 웹뷰로 전달
           if (_currentPosition != null) {
-            print('Page finished loading with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
+            print(
+                'Page finished loading with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
             _controller.runJavascript(
                 "window.userPosition = {latitude: ${_currentPosition?.latitude}, longitude: ${_currentPosition?.longitude}};");
           }
