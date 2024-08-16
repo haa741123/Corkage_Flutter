@@ -125,12 +125,14 @@ class _HomePageState extends State<HomePage> {
     bool serviceEnabled;
     LocationPermission permission;
 
+    // 위치 서비스 사용 가능한지 확인
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       print('Location services are disabled.');
       return;
     }
 
+    // 위치 권한 확인
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -141,78 +143,73 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      print('Location permissions are permanently denied, we cannot request permissions.');
       return;
     }
 
-    Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
-        .then((Position position) {
+    // 위치 정보 가져오기
+    try {
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       setState(() {
         _currentPosition = position;
       });
 
-      // 위치 정보를 로그에 출력
+      // 위치 정보 로그 출력
       print('Current position: ${position.latitude}, ${position.longitude}');
 
-      // 위치 정보를 웹뷰로 전달
-      _controller.runJavascript(
-          "window.userPosition = {latitude: ${position.latitude}, longitude: ${position.longitude}};");
-    }).catchError((e) {
+      // 위치 정보를 웹뷰에 전달
+      if (_controller != null) {
+        String jsCode = """
+          window.userPosition = {latitude: ${position.latitude}, longitude: ${position.longitude}};
+          console.log("userPosition set in JavaScript: ", window.userPosition);
+          moveMyloc();
+        """;
+        print("Executing JS code: $jsCode");
+        _controller.runJavascript(jsCode);
+      }
+    } catch (e) {
       print('Error getting location: $e');
-    });
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: WebView(
-        initialUrl: 'http://121.142.17.86:85/',
-        javascriptMode: JavascriptMode.unrestricted,
-        onWebViewCreated: (WebViewController webViewController) {
-          _controller = webViewController;
-          // 위치 정보를 웹뷰로 전달
-          if (_currentPosition != null) {
-            print(
-                'WebView created with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
-            _controller.runJavascript(
-                "window.userPosition = {latitude: ${_currentPosition?.latitude}, longitude: ${_currentPosition?.longitude}};");
-          }
-        },
-        onPageStarted: (String url) {
-          print('Page started loading: $url');
-        },
-        onPageFinished: (String url) {
-          print('Page finished loading: $url');
-          // 위치 정보를 웹뷰로 전달
-          if (_currentPosition != null) {
-            print(
-                'Page finished loading with position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
-            _controller.runJavascript(
-                "window.userPosition = {latitude: ${_currentPosition?.latitude}, longitude: ${_currentPosition?.longitude}};");
-          }
-        },
-        gestureNavigationEnabled: true,
-      ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 0,
-        onItemTapped: (index) {
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, Routes.home);
-              break;
-            case 1:
-              Navigator.pushNamed(context, Routes.camera);
-              break;
-            case 2:
-              Navigator.pushNamed(context, Routes.community);
-              break;
-            case 3:
-              Navigator.pushNamed(context, Routes.myPage);
-              break;
-          }
-        },
-      ),
-    );
-  }
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: WebView(
+      initialUrl: 'https://corkage.store/',
+      javascriptMode: JavascriptMode.unrestricted,
+      onWebViewCreated: (WebViewController webViewController) {
+        _controller = webViewController;
+      },
+      onPageFinished: (String url) {
+        print('Page finished loading: $url');
+        // 페이지가 로드된 후 위치 정보 전달
+        if (_currentPosition != null) {
+          String jsCode = "window.userPosition = {latitude: ${_currentPosition?.latitude}, longitude: ${_currentPosition?.longitude}}; moveMyloc();";
+          print("Executing JS code on page load: $jsCode");
+          _controller.runJavascript(jsCode);
+        }
+      },
+    ),
+    bottomNavigationBar: CustomBottomNavigationBar(
+      selectedIndex: 0,
+      onItemTapped: (index) {
+        switch (index) {
+          case 0:
+            Navigator.pushNamed(context, Routes.home);
+            break;
+          case 1:
+            Navigator.pushNamed(context, Routes.camera);
+            break;
+          case 2:
+            Navigator.pushNamed(context, Routes.community);
+            break;
+          case 3:
+            Navigator.pushNamed(context, Routes.myPage);
+            break;
+        }
+      },
+    ),
+  );
+}
 }
