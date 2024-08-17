@@ -10,34 +10,38 @@ class MyPage extends StatefulWidget {
 
 class _MyPageState extends State<MyPage> {
   late WebViewController _controller;
-  // 필요에 따라 _currentPosition 변수를 정의하세요.
-  // Position? _currentPosition; // 위치 정보를 담기 위한 변수
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(50.0), // AppBar의 높이를 50으로 설정
-        child: AppBar(
-          title: Text("마이 페이지"),
-          automaticallyImplyLeading: false,
-          actions: [
-            IconButton(
-              icon: Icon(Icons.settings),
-              onPressed: () {
-                Navigator.pushNamed(context, Routes.settings);
-              },
+      body: Column(
+        children: [
+          SizedBox(height: 20.0),  // 웹뷰 상단에 40.0 높이의 여백 추가
+          Expanded(
+            child: Stack(
+              children: [
+                WebView(
+                  initialUrl: 'https://corkage.store/mypage',
+                  javascriptMode: JavascriptMode.unrestricted,
+                  onWebViewCreated: (WebViewController webViewController) {
+                    _controller = webViewController;
+                  },
+                  gestureNavigationEnabled: true,
+                ),
+                Positioned(
+                  top: 30.0,  // 아이콘의 상단 위치를 웹뷰 여백 이후 기준으로 설정
+                  right: 16.0,
+                  child: IconButton(
+                    icon: Icon(Icons.settings, color: Colors.black, size: 30.0), // 아이콘 크기를 30.0으로 조절
+                    onPressed: () {
+                      Navigator.pushNamed(context, Routes.settings);
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-      body: WebView(
-        initialUrl: 'https://corkage.store/mypage',
-        javascriptMode: JavascriptMode.unrestricted,
-        onWebViewCreated: (WebViewController webViewController) {
-          _controller = webViewController;
-        },
-        gestureNavigationEnabled: true,
+          ),
+        ],
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: 3, // 적절한 인덱스로 설정
