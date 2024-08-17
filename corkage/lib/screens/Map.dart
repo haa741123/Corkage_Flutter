@@ -15,11 +15,6 @@ import 'package:intl/intl.dart';
 
 late List<CameraDescription> cameras;
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  cameras = await requestPermissions(); // 권한 요청 및 사용 가능한 카메라 목록 대기
-  runApp(MyApp());
-}
 
 class MyApp extends StatelessWidget {
   @override
@@ -29,7 +24,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: Routes.home, // 초기 경로 설정
+      initialRoute: Routes.home,  // 초기 경로 설정
       routes: {
         Routes.home: (context) => MapPage(),
         Routes.camera: (context) => CameraApp(cameras: cameras),
@@ -56,7 +51,7 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     WebView.platform = SurfaceAndroidWebView();
     _getCurrentLocation();
-    _checkFirstLaunch(); // 앱 첫 실행 여부 체크 및 광고 수신 동의 확인
+    _checkFirstLaunch();
   }
 
   Future<void> _checkFirstLaunch() async {
@@ -64,16 +59,15 @@ class _MapPageState extends State<MapPage> {
     bool? isFirstLaunch = prefs.getBool('isFirstLaunch');
 
     if (isFirstLaunch == null || isFirstLaunch) {
-      // 첫 실행인 경우
       _showAdsConsentDialog();
-      prefs.setBool('isFirstLaunch', false); // 첫 실행 이후로 설정
+      prefs.setBool('isFirstLaunch', false);
     }
   }
 
   void _showAdsConsentDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // 사용자 동의 전 다이얼로그 닫기 방지
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('광고 수신 동의'),
@@ -109,13 +103,10 @@ class _MapPageState extends State<MapPage> {
           DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
       prefs.setString('adsConsentTime', currentTime);
       message = '광고 수신을 허용했습니다: $currentTime';
-      print(message);
     } else {
       message = '광고 수신을 거부했습니다.';
-      print(message);
     }
 
-    // 하단 스낵바로 알림 표시
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -141,8 +132,7 @@ class _MapPageState extends State<MapPage> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      print('Location permissions are permanently denied.');
       return;
     }
 
@@ -153,10 +143,8 @@ class _MapPageState extends State<MapPage> {
         _currentPosition = position;
       });
 
-      // 위치 정보를 로그에 출력
       print('Current position: ${position.latitude}, ${position.longitude}');
 
-      // 위치 정보를 웹뷰로 전달
       if (_controller != null) {
         _sendLocationToWebView(position.latitude, position.longitude);
       }
@@ -180,16 +168,12 @@ class _MapPageState extends State<MapPage> {
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
 
-          // WebView가 생성된 후 위치 정보 전달
           if (_currentPosition != null) {
             _sendLocationToWebView(
                 _currentPosition!.latitude, _currentPosition!.longitude);
           }
         },
         onPageFinished: (String url) {
-          print('Page finished loading: $url');
-
-          // 페이지 로딩이 끝난 후 위치 정보 전달
           if (_currentPosition != null) {
             _sendLocationToWebView(
                 _currentPosition!.latitude, _currentPosition!.longitude);
