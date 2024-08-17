@@ -32,7 +32,7 @@ class _MyPageState extends State<MyPage> {
         ),
       ),
       body: WebView(
-        initialUrl: 'http://121.142.17.86:85/',
+        initialUrl: 'https://corkage.store/mypage',
         javascriptMode: JavascriptMode.unrestricted,
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
