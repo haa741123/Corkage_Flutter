@@ -3,7 +3,7 @@ import '/routes.dart';
 import '/screens/Community.dart';
 import '/screens/MyPage.dart';
 import '/screens/Camera.dart';
-import '/main.dart';
+import '/screens/Map.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
@@ -82,7 +82,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget _getPage(String routeName) {
     switch (routeName) {
       case Routes.home:
-        return HomePage();
+        return MapPage();
       case Routes.camera:
         return CameraApp(cameras: cameras);
       case Routes.community:
@@ -90,7 +90,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
       case Routes.myPage:
         return MyPage();
       default:
-        return HomePage();
+        return MapPage();
     }
   }
 }

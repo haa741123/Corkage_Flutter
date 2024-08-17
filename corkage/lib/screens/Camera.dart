@@ -8,7 +8,7 @@ import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
 import 'MyPage.dart';
 import 'Community.dart';
-import '/main.dart';
+import 'Map.dart';
 
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -348,7 +348,7 @@ void main() async {
   runApp(MaterialApp(
     home: CameraApp(cameras: cameras),
     routes: {
-      Routes.home: (context) => HomePage(),
+      Routes.home: (context) => MapPage(),
       Routes.camera: (context) => CameraApp(cameras: cameras),
       Routes.myPage: (context) => MyPage(),
       Routes.community: (context) => CommunityPage(),
