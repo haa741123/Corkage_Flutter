@@ -101,7 +101,7 @@ class CameraAppState extends State<CameraApp> {
       final url = 'https://api.ocr.space/parse/image';
       final payload = {
         "base64Image": "data:image/jpg;base64,$img64",
-        "language": "kor"
+        "language": "eng"
       };
       final header = {"apikey": "K85191029988957"};
 
