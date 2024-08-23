@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
-import 'Camera_Result.dart';  // Camera_Result 페이지를 가져옵니다
+import 'Camera_Result.dart'; // Camera_Result 페이지를 가져옵니다
 import 'MyPage.dart';
 import 'Community.dart';
 import 'Map.dart';
@@ -63,12 +63,24 @@ class CameraAppState extends State<CameraApp> {
 
   Future<void> _takePicture() async {
     try {
+      // 로딩 화면을 띄웁니다.
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(child: CircularProgressIndicator());
+        },
+      );
+
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
 
       final extractedText = await _performOCR(image);
+
+      // 로딩 화면을 닫습니다.
+      Navigator.of(context).pop();
 
       // OCR 결과와 이미지 경로를 가지고 CameraResultPage로 이동합니다.
       Navigator.push(
@@ -82,6 +94,7 @@ class CameraAppState extends State<CameraApp> {
       );
     } catch (e) {
       print('사진 촬영 오류: $e');
+      Navigator.of(context).pop(); // 에러 발생 시 로딩 화면을 닫습니다.
     }
   }
 
@@ -106,7 +119,8 @@ class CameraAppState extends State<CameraApp> {
       };
       final header = {"apikey": "K85191029988957"};
 
-      final response = await http.post(Uri.parse(url), body: payload, headers: header);
+      final response =
+          await http.post(Uri.parse(url), body: payload, headers: header);
 
       print('OCR API Response: ${response.body}');
 
@@ -154,7 +168,8 @@ class CameraAppState extends State<CameraApp> {
                   builder: (BuildContext context, BoxConstraints constraints) {
                     return GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTapDown: (details) => _onViewFinderTap(details, constraints),
+                      onTapDown: (details) =>
+                          _onViewFinderTap(details, constraints),
                       child: CameraPreview(controller),
                     );
                   },
@@ -220,8 +235,10 @@ class FramePainter extends CustomPainter {
     final offsetX = (size.width - width) / 2; // 프레임을 중앙에 위치시키기 위한 X 오프셋
     final offsetY = (size.height - height) / 2; // 프레임을 중앙에 위치시키기 위한 Y 오프셋
 
-    final rect = Rect.fromLTWH(offsetX, offsetY, width, height); // 중앙에 위치한 프레임의 사각형
-    final RRect rrect = RRect.fromRectAndRadius(rect, Radius.circular(10)); // 둥근 모서리 사각형
+    final rect =
+        Rect.fromLTWH(offsetX, offsetY, width, height); // 중앙에 위치한 프레임의 사각형
+    final RRect rrect =
+        RRect.fromRectAndRadius(rect, Radius.circular(10)); // 둥근 모서리 사각형
 
     // 좌측 상단 코너
     canvas.drawLine(
