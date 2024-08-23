@@ -141,7 +141,7 @@ class CameraAppState extends State<CameraApp> {
       print('사진 촬영 오류: $e');
       if (mounted) {
         Navigator.of(context).pop(); // 에러 발생 시 로딩 화면을 닫습니다.
-      } //
+      } // 2
     }
   }
 
