@@ -124,14 +124,14 @@ class CameraAppState extends State<CameraApp> {
         Navigator.of(context).pop();
       }
 
-      // OCR 결과와 이미지 경로, 카메라 리스트를 가지고 CameraResultPage로 이동합니다.
+// OCR 결과와 이미지 경로, 카메라 리스트를 가지고 CameraResultPage로 이동합니다.
       if (mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => CameraResultPage(
               imagePath: image.path,
-              extractedText: extractedText,
+              extractedText: extractedText, // OCR 결과값 전달
               cameras: widget.cameras,
             ),
           ),

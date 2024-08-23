@@ -41,6 +41,11 @@ class _CameraResultPageState extends State<CameraResultPage> {
                     onWebViewCreated: (WebViewController webViewController) {
                       _controller = webViewController;
                     },
+                    onPageFinished: (String url) {
+                      // 페이지가 로드된 후 JavaScript를 통해 추출된 텍스트 전달
+                      _controller.evaluateJavascript(
+                          "document.getElementById('searchField').value = '${widget.extractedText}';");
+                    },
                     gestureNavigationEnabled: true,
                   ),
                 ),
