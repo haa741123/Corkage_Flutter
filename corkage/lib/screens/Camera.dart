@@ -215,6 +215,28 @@ class CameraAppState extends State<CameraApp> {
             painter: FramePainter(),
             child: Container(),
           ),
+          // 화면 중앙에 텍스트 추가
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.4, // 화면 중앙에 위치
+            left: MediaQuery.of(context).size.width * 0.1,
+            right: MediaQuery.of(context).size.width * 0.1,
+            child: Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.6), // 배경색을 흰색 반투명으로 설정
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '와인 제품 전체가 보이도록\n 정면으로 찍어주세요',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black, // 텍스트 색상
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
           Positioned(
             bottom: 60,
             left: 0,
