@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
-import 'Camera_Result.dart'; // Camera_Result 페이지를 가져옵니다
+import 'Camera_Result.dart';
 import 'MyPage.dart';
 import 'Community.dart';
 import 'Map.dart';
@@ -81,7 +81,7 @@ class CameraAppState extends State<CameraApp> {
               children: [
                 // 배경 이미지 추가
                 Image.asset(
-                  'assets/spl.png', // 배경 이미지 경로
+                  'assets/spl.png',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
@@ -93,11 +93,11 @@ class CameraAppState extends State<CameraApp> {
                     CircularProgressIndicator(),
                     SizedBox(height: 20),
                     Text(
-                      '라벨 분석중입니다', // 한글로 된 로딩 텍스트
+                      '라벨 분석중입니다',
                       style: TextStyle(
-                        color: Colors.black, // 텍스트 색상 설정
+                        color: Colors.black,
                         fontSize: 18,
-                        decoration: TextDecoration.none, // 밑줄 제거
+                        decoration: TextDecoration.none,
                       ),
                     ),
                   ],
@@ -130,7 +130,7 @@ class CameraAppState extends State<CameraApp> {
             builder: (context) => CameraResultPage(
               imagePath: image.path,
               extractedText: extractedText,
-              cameras: widget.cameras, // 카메라 리스트 전달
+              cameras: widget.cameras,
             ),
           ),
         );
@@ -226,20 +226,20 @@ class CameraAppState extends State<CameraApp> {
           ),
           // 화면 중앙에 텍스트 추가
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.4, // 화면 중앙에 위치
+            top: MediaQuery.of(context).size.height * 0.4,
             left: MediaQuery.of(context).size.width * 0.1,
             right: MediaQuery.of(context).size.width * 0.1,
             child: Container(
               padding: EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.6), // 배경색을 흰색 반투명으로 설정
+                color: Colors.white.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '와인 제품 전체가 보이도록\n정면으로 찍어주세요',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.black, // 텍스트 색상
+                  color: Colors.black,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -253,8 +253,8 @@ class CameraAppState extends State<CameraApp> {
             child: Center(
               child: FloatingActionButton(
                 onPressed: _takePicture,
-                backgroundColor: Colors.red, // 버튼 색상 빨간색
-                child: Icon(Icons.camera_alt, color: Colors.white), // 아이콘 색상 흰색
+                backgroundColor: Colors.red,
+                child: Icon(Icons.camera_alt, color: Colors.white),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30.0),
                 ),
@@ -286,28 +286,25 @@ class CameraAppState extends State<CameraApp> {
   }
 }
 
-// 중앙 프레임을 그리는 CustomPainter 클래스
 class FramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white // 프레임 색상
-      ..strokeWidth = 4 // 프레임 두께
+      ..color = Colors.white
+      ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
 
-    final double cornerSize = 30; // 코너의 길이
-    final double cornerThickness = 4; // 코너의 두께
-    final width = size.width * 0.8; // 프레임 너비
-    final height = size.height * 0.5; // 프레임 높이
-    final offsetX = (size.width - width) / 2; // 프레임을 중앙에 위치시키기 위한 X 오프셋
-    final offsetY = (size.height - height) / 2; // 프레임을 중앙에 위치시키기 위한 Y 오프셋
+    final double cornerSize = 30;
+    final double cornerThickness = 4;
+    final width = size.width * 0.8;
+    final height = size.height * 0.5;
+    final offsetX = (size.width - width) / 2;
+    final offsetY = (size.height - height) / 2;
 
-    final rect =
-        Rect.fromLTWH(offsetX, offsetY, width, height); // 중앙에 위치한 프레임의 사각형
-    final RRect rrect =
-        RRect.fromRectAndRadius(rect, Radius.circular(10)); // 둥근 모서리 사각형
+    final rect = Rect.fromLTWH(offsetX, offsetY, width, height);
+    final RRect rrect = RRect.fromRectAndRadius(rect, Radius.circular(10));
 
-    // 좌측 상단 코너
+    // Draw corners
     canvas.drawLine(
       Offset(rrect.left, rrect.top),
       Offset(rrect.left + cornerSize, rrect.top),
@@ -319,7 +316,6 @@ class FramePainter extends CustomPainter {
       paint..strokeWidth = cornerThickness,
     );
 
-    // 우측 상단 코너
     canvas.drawLine(
       Offset(rrect.right, rrect.top),
       Offset(rrect.right - cornerSize, rrect.top),
@@ -331,7 +327,6 @@ class FramePainter extends CustomPainter {
       paint..strokeWidth = cornerThickness,
     );
 
-    // 좌측 하단 코너
     canvas.drawLine(
       Offset(rrect.left, rrect.bottom),
       Offset(rrect.left + cornerSize, rrect.bottom),
@@ -343,7 +338,6 @@ class FramePainter extends CustomPainter {
       paint..strokeWidth = cornerThickness,
     );
 
-    // 우측 하단 코너
     canvas.drawLine(
       Offset(rrect.right, rrect.bottom),
       Offset(rrect.right - cornerSize, rrect.bottom),
