@@ -93,10 +93,11 @@ class CameraAppState extends State<CameraApp> {
                     CircularProgressIndicator(),
                     SizedBox(height: 20),
                     Text(
-                      '로딩 중입니다...', // 한글로 된 로딩 텍스트
+                      '라벨 분석중입니다', // 한글로 된 로딩 텍스트
                       style: TextStyle(
-                        color: Colors.white, // 텍스트 색상 설정
+                        color: Colors.black, // 텍스트 색상 설정
                         fontSize: 18,
+                        decoration: TextDecoration.none, // 밑줄 제거
                       ),
                     ),
                   ],
