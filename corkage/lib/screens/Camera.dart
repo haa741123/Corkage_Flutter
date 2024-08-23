@@ -57,7 +57,9 @@ class CameraAppState extends State<CameraApp> {
 
   @override
   void dispose() {
-    controller.dispose();
+    if (controller.value.isInitialized) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -115,22 +117,28 @@ class CameraAppState extends State<CameraApp> {
       final extractedText = await _performOCR(image);
 
       // 로딩 화면을 닫습니다.
-      Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
 
       // OCR 결과와 이미지 경로, 카메라 리스트를 가지고 CameraResultPage로 이동합니다.
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CameraResultPage(
-            imagePath: image.path,
-            extractedText: extractedText,
-            cameras: widget.cameras, // 카메라 리스트 전달
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CameraResultPage(
+              imagePath: image.path,
+              extractedText: extractedText,
+              cameras: widget.cameras, // 카메라 리스트 전달
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       print('사진 촬영 오류: $e');
-      Navigator.of(context).pop(); // 에러 발생 시 로딩 화면을 닫습니다.
+      if (mounted) {
+        Navigator.of(context).pop(); // 에러 발생 시 로딩 화면을 닫습니다.
+      }
     }
   }
 
@@ -227,7 +235,7 @@ class CameraAppState extends State<CameraApp> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                '와인 제품 전체가 보이도록\n 정면으로 찍어주세요',
+                '와인 제품 전체가 보이도록\n정면으로 찍어주세요',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.black, // 텍스트 색상
