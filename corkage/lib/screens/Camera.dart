@@ -3,7 +3,6 @@ import 'package:camera/camera.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:image/image.dart' as img;
 import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
 import 'Camera_Result.dart';
@@ -112,13 +111,13 @@ class CameraAppState extends State<CameraApp> {
         imageFile = image;
       });
 
-      // OCR 수행
-      final extractedText = await _performOCR(image);
-
       // 카메라 컨트롤러 종료
       if (controller.value.isInitialized) {
         await controller.dispose();
       }
+
+      // OCR 수행
+      final extractedText = await _performOCR(image);
 
       // 로딩 화면을 닫습니다.
       if (mounted) {
@@ -148,37 +147,55 @@ class CameraAppState extends State<CameraApp> {
 
   Future<String> _performOCR(XFile image) async {
     try {
+      // 이미지 파일을 base64로 인코딩
       final bytes = await File(image.path).readAsBytes();
-      final decodedImage = img.decodeImage(bytes);
+      final base64Image = base64Encode(bytes);
 
-      if (decodedImage == null) {
-        throw Exception('이미지 디코딩 실패');
-      }
-
-      final resizedImage = img.copyResize(decodedImage, width: 1024);
-      final resizedBytes = img.encodeJpg(resizedImage, quality: 70);
-
-      final img64 = base64Encode(resizedBytes);
-
-      final url = 'https://api.ocr.space/parse/image';
-      final payload = {
-        "base64Image": "data:image/jpg;base64,$img64",
-        "language": "eng"
+      // API URL 및 요청 생성
+      final url =
+          'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAoRU8c1tGQ2B0VQz8N0G_2NiYTZ2U3rLg';
+      final request = {
+        "requests": [
+          {
+            "image": {"content": base64Image},
+            "features": [
+              {"type": "TEXT_DETECTION"}
+            ]
+          }
+        ]
       };
-      final header = {"apikey": "K85191029988957"};
 
-      final response =
-          await http.post(Uri.parse(url), body: payload, headers: header);
+      // API 요청 전 로그 출력
+      print('Sending OCR request to Google Cloud Vision API...');
+      print('Request URL: $url');
+      print('Request Body: ${jsonEncode(request)}');
 
-      print('OCR API Response: ${response.body}');
+      // API 요청 보내기
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(request),
+      );
 
-      final result = jsonDecode(response.body);
-
-      if (result['IsErroredOnProcessing'] == true) {
-        throw Exception(result['ErrorMessage'].join(', '));
+      // 응답 상태 코드 확인
+      if (response.statusCode != 200) {
+        print('API Response Status Code: ${response.statusCode}');
+        print('API Response Body: ${response.body}');
+        throw Exception('Failed to perform OCR');
       }
 
-      return result['ParsedResults'][0]['ParsedText'] ?? '텍스트를 추출할 수 없습니다.';
+      // API 응답 후 로그 출력
+      print('API Response Status Code: ${response.statusCode}');
+      print('API Response Body: ${response.body}');
+
+      // 응답 처리
+      final result = jsonDecode(response.body);
+      if (result['responses'] != null &&
+          result['responses'][0]['textAnnotations'] != null) {
+        return result['responses'][0]['textAnnotations'][0]['description'];
+      } else {
+        return '텍스트를 추출할 수 없습니다.';
+      }
     } catch (e) {
       print('OCR 처리 오류: $e');
       return 'OCR 처리 중 오류가 발생했습니다.';

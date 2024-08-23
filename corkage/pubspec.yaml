@@ -41,6 +41,8 @@ dependencies:
   geolocator_android: 4.5.5
   intl: ^0.17.0
   shared_preferences: ^2.0.8
+  googleapis: ^10.0.0
+  googleapis_auth: ^1.1.0
 
 
   # The following adds the Cupertino Icons font to your application.
