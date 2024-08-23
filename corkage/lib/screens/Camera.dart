@@ -79,14 +79,12 @@ class CameraAppState extends State<CameraApp> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // 배경 이미지 추가
                 Image.asset(
                   'assets/spl.png',
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
                 ),
-                // 로딩 인디케이터와 텍스트 추가
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -114,11 +112,13 @@ class CameraAppState extends State<CameraApp> {
         imageFile = image;
       });
 
-      // 카메라 컨트롤러 종료
-      await controller.dispose();
-
       // OCR 수행
       final extractedText = await _performOCR(image);
+
+      // 카메라 컨트롤러 종료
+      if (controller.value.isInitialized) {
+        await controller.dispose();
+      }
 
       // 로딩 화면을 닫습니다.
       if (mounted) {
