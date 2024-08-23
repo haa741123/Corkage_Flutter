@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:image/image.dart' as img;
 import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
+import 'Camera_Result.dart';  // Camera_Result 페이지를 가져옵니다
 import 'MyPage.dart';
 import 'Community.dart';
 import 'Map.dart';
@@ -23,7 +24,6 @@ class CameraAppState extends State<CameraApp> {
   late CameraController controller;
   String errorMessage = '';
   XFile? imageFile;
-  String extractedText = '';
 
   @override
   void initState() {
@@ -39,7 +39,6 @@ class CameraAppState extends State<CameraApp> {
         if (!mounted) {
           return;
         }
-        // 플래시를 끕니다.
         controller.setFlashMode(FlashMode.off);
         setState(() {});
       }).catchError((Object e) {
@@ -47,14 +46,6 @@ class CameraAppState extends State<CameraApp> {
           setState(() {
             errorMessage = '카메라 초기화 오류: ${e.code}';
           });
-          switch (e.code) {
-            case 'CameraAccessDenied':
-              print("CameraController Error : CameraAccessDenied");
-              break;
-            default:
-              print("CameraController Error");
-              break;
-          }
         }
       });
     } else {
@@ -77,14 +68,24 @@ class CameraAppState extends State<CameraApp> {
         imageFile = image;
       });
 
-      // OCR 처리
-      await _performOCR(image);
+      final extractedText = await _performOCR(image);
+
+      // OCR 결과와 이미지 경로를 가지고 CameraResultPage로 이동합니다.
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraResultPage(
+            imagePath: image.path,
+            extractedText: extractedText,
+          ),
+        ),
+      );
     } catch (e) {
       print('사진 촬영 오류: $e');
     }
   }
 
-  Future<void> _performOCR(XFile image) async {
+  Future<String> _performOCR(XFile image) async {
     try {
       final bytes = await File(image.path).readAsBytes();
       final decodedImage = img.decodeImage(bytes);
@@ -107,7 +108,6 @@ class CameraAppState extends State<CameraApp> {
 
       final response = await http.post(Uri.parse(url), body: payload, headers: header);
 
-      // 응답 출력
       print('OCR API Response: ${response.body}');
 
       final result = jsonDecode(response.body);
@@ -116,27 +116,11 @@ class CameraAppState extends State<CameraApp> {
         throw Exception(result['ErrorMessage'].join(', '));
       }
 
-      setState(() {
-        extractedText = result['ParsedResults'][0]['ParsedText'] ?? '텍스트를 추출할 수 없습니다.';
-      });
+      return result['ParsedResults'][0]['ParsedText'] ?? '텍스트를 추출할 수 없습니다.';
     } catch (e) {
       print('OCR 처리 오류: $e');
-      setState(() {
-        extractedText = 'OCR 처리 중 오류가 발생했습니다.';
-      });
+      return 'OCR 처리 중 오류가 발생했습니다.';
     }
-  }
-
-  void _confirmPicture() {
-    // 여기에서 이미지를 서버로 전송하거나 저장하는 작업을 수행할 수 있습니다.
-    print('사진 확인');
-  }
-
-  void _retakePicture() {
-    setState(() {
-      imageFile = null;
-      extractedText = '';
-    });
   }
 
   void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
@@ -175,58 +159,10 @@ class CameraAppState extends State<CameraApp> {
                     );
                   },
                 )
-              : Column(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Image.file(File(imageFile!.path)),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(extractedText),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _confirmPicture,
-                          child: Text('확인'),
-                        ),
-                        ElevatedButton(
-                          onPressed: _retakePicture,
-                          child: Text('취소'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              : Container(), // 이미지가 찍히면 이 부분은 비워둡니다
           CustomPaint(
             painter: FramePainter(),
             child: Container(),
-          ),
-          Positioned(
-            bottom: 200,
-            left: 20,
-            right: 20,
-            child: Center(
-              child: Container(
-                padding: EdgeInsets.all(12.0),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '와인 제품 전체가 다 보이도록\n정면으로 찍어주세요',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
           ),
           Positioned(
             bottom: 60,
