@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '/routes.dart';
+import 'camera.dart'; // CameraApp 페이지를 가져옵니다
+import 'package:camera/camera.dart';
 
 class CameraResultPage extends StatefulWidget {
   final String imagePath;
   final String extractedText;
+  final List<CameraDescription> cameras; // 카메라 리스트 추가
 
   const CameraResultPage({
     Key? key,
     required this.imagePath,
     required this.extractedText,
+    required this.cameras, // 카메라 리스트를 필수로 추가
   }) : super(key: key);
 
   @override
@@ -22,15 +26,15 @@ class _CameraResultPageState extends State<CameraResultPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set background color to white
+      backgroundColor: Colors.white, // 배경 색상 흰색으로 설정
       body: Stack(
         children: [
           Column(
             children: [
-              SizedBox(height: 80.0), // Adding 80px space at the top
+              SizedBox(height: 80.0), // 상단에 80px 여백 추가
               Expanded(
                 child: Container(
-                  decoration: BoxDecoration(), // Ensuring no border or shadow
+                  decoration: BoxDecoration(), // 테두리나 그림자 제거
                   child: WebView(
                     initialUrl: 'https://corkage.store/drink_info',
                     javascriptMode: JavascriptMode.unrestricted,
@@ -44,12 +48,18 @@ class _CameraResultPageState extends State<CameraResultPage> {
             ],
           ),
           Positioned(
-            top: 30.0, // Adjusted for the 80px space
+            top: 30.0, // 80px 여백에 맞춘 위치 조정
             left: 10.0,
             child: IconButton(
               icon: Icon(Icons.arrow_back, color: Colors.black, size: 30.0),
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CameraApp(cameras: widget.cameras), // 기존 카메라 리스트 전달
+                  ),
+                );
               },
             ),
           ),

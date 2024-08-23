@@ -72,23 +72,26 @@ class CameraAppState extends State<CameraApp> {
         },
       );
 
+      // 사진 촬영
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
 
+      // OCR 수행
       final extractedText = await _performOCR(image);
 
       // 로딩 화면을 닫습니다.
       Navigator.of(context).pop();
 
-      // OCR 결과와 이미지 경로를 가지고 CameraResultPage로 이동합니다.
+      // OCR 결과와 이미지 경로, 카메라 리스트를 가지고 CameraResultPage로 이동합니다.
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => CameraResultPage(
             imagePath: image.path,
             extractedText: extractedText,
+            cameras: widget.cameras, // 카메라 리스트 전달
           ),
         ),
       );
