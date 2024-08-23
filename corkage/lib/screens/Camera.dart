@@ -62,13 +62,46 @@ class CameraAppState extends State<CameraApp> {
   }
 
   Future<void> _takePicture() async {
+    if (!controller.value.isInitialized) {
+      print('카메라가 초기화되지 않았습니다.');
+      return;
+    }
+
     try {
       // 로딩 화면을 띄웁니다.
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return Center(child: CircularProgressIndicator());
+          return Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // 배경 이미지 추가
+                Image.asset(
+                  'assets/spl.png', // 배경 이미지 경로
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                // 로딩 인디케이터와 텍스트 추가
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text(
+                      '로딩 중입니다...', // 한글로 된 로딩 텍스트
+                      style: TextStyle(
+                        color: Colors.white, // 텍스트 색상 설정
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
         },
       );
 
