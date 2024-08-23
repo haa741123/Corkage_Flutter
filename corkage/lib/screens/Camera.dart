@@ -114,6 +114,9 @@ class CameraAppState extends State<CameraApp> {
         imageFile = image;
       });
 
+      // 카메라 컨트롤러 종료
+      await controller.dispose();
+
       // OCR 수행
       final extractedText = await _performOCR(image);
 
