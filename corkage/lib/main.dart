@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/Map.dart'; // MapPage 클래스를 포함하고 있는 파일
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/Map.dart';
 import '/routes.dart';
 import '/screens/Camera.dart';
 import '/screens/MyPage.dart';
@@ -26,7 +27,7 @@ class CameraService {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  cameras = await availableCameras();  // 여기서 카메라 초기화
+  CameraService().initializeCameras();
   runApp(MyApp());
 }
 
@@ -40,10 +41,10 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => FullScreenImagePage(),
+        '/': (context) => SplashScreen(),
         '/map': (context) => MapPage(),
         Routes.home: (context) => MapPage(),
-        Routes.camera: (context) => CameraApp(cameras: CameraService().cameras),  // 초기화 후 접근
+        Routes.camera: (context) => CameraApp(cameras: CameraService().cameras),
         Routes.myPage: (context) => MyPage(),
         Routes.community: (context) => CommunityPage(),
         Routes.settings: (context) => SettingsPage(),
@@ -53,16 +54,84 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class FullScreenImagePage extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _startSplashScreenTimer();
+  }
+
+  Future<void> _startSplashScreenTimer() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isFirstRun = prefs.getBool('isFirstRun') ?? true;
+
+    // 5초 동안 사진을 표시한 후 최초 실행 여부에 따라 페이지 이동
+    Future.delayed(Duration(seconds: 3), () {
+      if (isFirstRun) {
+        prefs.setBool('isFirstRun', false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => OnboardingPage()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MapPage()),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        // 5초 동안 표시될 이미지
+        child: Image.asset(
+          'assets/spl.png', // 띄우고 싶은 이미지 경로
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
+      ),
+    );
+  }
+}
+
+class OnboardingPage extends StatefulWidget {
+  @override
+  _OnboardingPageState createState() => _OnboardingPageState();
+}
+
+class _OnboardingPageState extends State<OnboardingPage> {
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset('assets/spl.png',
-              fit: BoxFit.cover,
-            ),
+          PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            children: [
+              _buildPage(
+                imagePath: 'assets/onboarding1.png',
+              ),
+              _buildPage(
+                imagePath: 'assets/onboarding2.png',
+              ),
+            ],
           ),
           Align(
             alignment: Alignment.bottomCenter,
@@ -70,22 +139,58 @@ class FullScreenImagePage extends StatelessWidget {
               width: double.infinity,
               color: Colors.black.withOpacity(0.8),
               padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: TextButton(
-                onPressed: () {
-                  print("Button pressed");
-                  Navigator.pushNamed(context, '/map');
-                },
-                child: Text(
-                  '카카오톡으로 3초 회원가입',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15.0,
-                  ),
-                ),
-              ),
+              child: _currentPage == 1
+                  ? TextButton(
+                      onPressed: () {
+                        print("Button pressed");
+                        Navigator.pushNamed(context, '/map'); // 로그인 페이지로 이동
+                      },
+                      child: Text(
+                        '카카오톡으로 3초 회원가입',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15.0,
+                        ),
+                      ),
+                    )
+                  : TextButton(
+                      onPressed: () {
+                        _pageController.nextPage(
+                          duration: Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Text(
+                        '다음',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15.0,
+                        ),
+                      ),
+                    ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPage({
+    required String imagePath,
+  }) {
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.9,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
       ),
     );
   }
