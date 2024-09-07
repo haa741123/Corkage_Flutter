@@ -7,7 +7,7 @@ import '/screens/MyPage.dart';
 import '/screens/Community.dart';
 import '/screens/SettingsPage.dart';
 import '/screens/NoticePage.dart';
-import '/utils/permision.dart';
+import '/screens/login.dart'; // Import the login page
 import 'package:camera/camera.dart';
 
 class CameraService {
@@ -27,7 +27,7 @@ class CameraService {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  CameraService().initializeCameras();
+  await CameraService().initializeCameras();
   runApp(MyApp());
 }
 
@@ -49,6 +49,7 @@ class MyApp extends StatelessWidget {
         Routes.community: (context) => CommunityPage(),
         Routes.settings: (context) => SettingsPage(),
         Routes.notice: (context) => NoticePage(),
+        Routes.login: (context) => Login(), // Integrate LoginPage route
       },
     );
   }
@@ -70,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isFirstRun = prefs.getBool('isFirstRun') ?? true;
 
-    // 5초 동안 사진을 표시한 후 최초 실행 여부에 따라 페이지 이동
+    // Display splash for 3 seconds and then navigate
     Future.delayed(Duration(seconds: 3), () {
       if (isFirstRun) {
         prefs.setBool('isFirstRun', false);
@@ -91,9 +92,8 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        // 5초 동안 표시될 이미지
         child: Image.asset(
-          'assets/spl.png', // 띄우고 싶은 이미지 경로
+          'assets/spl.png', // Path to your splash image
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
@@ -142,8 +142,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: _currentPage == 1
                   ? TextButton(
                       onPressed: () {
-                        print("Button pressed");
-                        Navigator.pushNamed(context, '/map'); // 로그인 페이지로 이동
+                        Navigator.pushReplacementNamed(
+                            context, Routes.login); // Navigate to login page
                       },
                       child: Text(
                         '카카오톡으로 3초 회원가입',
