@@ -10,10 +10,48 @@ import 'MyPage.dart';
 import 'Community.dart';
 import 'Map.dart';
 
+List<CameraDescription>? cameras;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  cameras = await availableCameras();
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter WebView Example',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
+      routes: {
+        Routes.home: (context) => MapPage(cameras: cameras),
+        Routes.camera: (context) =>
+            cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
+        Routes.myPage: (context) => MyPage(cameras: cameras),
+        Routes.community: (context) => CommunityPage(cameras: cameras),
+      },
+    );
+  }
+}
+
+class ErrorPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Error")),
+      body: Center(child: Text("Camera is not available")),
+    );
+  }
+}
+
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
 
-  const CameraApp({super.key, required this.cameras});
+  const CameraApp({Key? key, required this.cameras}) : super(key: key);
 
   @override
   State<CameraApp> createState() => CameraAppState();
@@ -27,29 +65,28 @@ class CameraAppState extends State<CameraApp> {
   @override
   void initState() {
     super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
     if (widget.cameras.isNotEmpty) {
       controller = CameraController(
         widget.cameras[0],
         ResolutionPreset.max,
         enableAudio: false,
       );
-
-      controller.initialize().then((_) {
-        if (!mounted) {
-          return;
-        }
+      try {
+        await controller.initialize();
         controller.setFlashMode(FlashMode.off);
         setState(() {});
-      }).catchError((Object e) {
-        if (e is CameraException) {
-          setState(() {
-            errorMessage = '카메라 초기화 오류: ${e.code}';
-          });
-        }
-      });
+      } catch (e) {
+        setState(() {
+          errorMessage = 'Error initializing camera: $e';
+        });
+      }
     } else {
       setState(() {
-        errorMessage = '사용 가능한 카메라가 없습니다.';
+        errorMessage = 'No available cameras.';
       });
     }
   }
@@ -64,96 +101,57 @@ class CameraAppState extends State<CameraApp> {
 
   Future<void> _takePicture() async {
     if (!controller.value.isInitialized) {
-      print('카메라가 초기화되지 않았습니다.');
+      print('Camera is not initialized.');
       return;
     }
 
     try {
-      // 로딩 화면을 띄웁니다.
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
           return Center(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Image.asset(
-                  'assets/spl.png',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 20),
-                    Text(
-                      '라벨 분석중입니다',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            child: CircularProgressIndicator(),
           );
         },
       );
 
-      // 사진 촬영
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
 
-      // 카메라 컨트롤러 종료
-      if (controller.value.isInitialized) {
-        await controller.dispose();
-      }
-
-      // OCR 수행
       final extractedText = await _performOCR(image);
 
-      // 로딩 화면을 닫습니다.
       if (mounted) {
         Navigator.of(context).pop();
       }
 
-// OCR 결과와 이미지 경로, 카메라 리스트를 가지고 CameraResultPage로 이동합니다.
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CameraResultPage(
-              imagePath: image.path,
-              extractedText: extractedText, // OCR 결과값 전달
-              cameras: widget.cameras,
-            ),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraResultPage(
+            imagePath: image.path,
+            extractedText: extractedText,
+            cameras: widget.cameras,
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
-      print('사진 촬영 오류: $e');
+      print('Error taking picture: $e');
       if (mounted) {
-        Navigator.of(context).pop(); // 에러 발생 시 로딩 화면을 닫습니다.
-      } // 2
+        Navigator.of(context).pop();
+      }
     }
   }
 
   Future<String> _performOCR(XFile image) async {
     try {
-      // 이미지 파일을 base64로 인코딩
       final bytes = await File(image.path).readAsBytes();
       final base64Image = base64Encode(bytes);
 
-      // API URL 및 요청 생성
       final url =
-          'https://vision.googleapis.com/v1/images:annotate?key=AIzaSyAoRU8c1tGQ2B0VQz8N0G_2NiYTZ2U3rLg';
+          'https://vision.googleapis.com/v1/images:annotate?key=YOUR_API_KEY';
       final request = {
         "requests": [
           {
@@ -165,40 +163,20 @@ class CameraAppState extends State<CameraApp> {
         ]
       };
 
-      // API 요청 전 로그 출력
-      print('Sending OCR request to Google Cloud Vision API...');
-      print('Request URL: $url');
-      print('Request Body: ${jsonEncode(request)}');
-
-      // API 요청 보내기
       final response = await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(request),
       );
 
-      // 응답 상태 코드 확인
-      if (response.statusCode != 200) {
-        print('API Response Status Code: ${response.statusCode}');
-        print('API Response Body: ${response.body}');
-        throw Exception('Failed to perform OCR');
-      }
-
-      // API 응답 후 로그 출력
-      print('API Response Status Code: ${response.statusCode}');
-      print('API Response Body: ${response.body}');
-
-      // 응답 처리
-      final result = jsonDecode(response.body);
-      if (result['responses'] != null &&
-          result['responses'][0]['textAnnotations'] != null) {
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
         return result['responses'][0]['textAnnotations'][0]['description'];
       } else {
-        return '텍스트를 추출할 수 없습니다.';
+        return 'Unable to extract text.';
       }
     } catch (e) {
-      print('OCR 처리 오류: $e');
-      return 'OCR 처리 중 오류가 발생했습니다.';
+      return 'OCR error: $e';
     }
   }
 
@@ -224,27 +202,23 @@ class CameraAppState extends State<CameraApp> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // 뒤로 가기 아이콘을 삭제
+        automaticallyImplyLeading: false,
       ),
       body: Stack(
         children: [
-          imageFile == null
-              ? LayoutBuilder(
-                  builder: (BuildContext context, BoxConstraints constraints) {
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: (details) =>
-                          _onViewFinderTap(details, constraints),
-                      child: CameraPreview(controller),
-                    );
-                  },
-                )
-              : Container(), // 이미지가 찍히면 이 부분은 비워둡니다
-          CustomPaint(
-            painter: FramePainter(),
-            child: Container(),
+          CameraPreview(controller),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (details) => _onViewFinderTap(details, constraints),
+                child: CustomPaint(
+                  size: Size.infinite,
+                  painter: FramePainter(), // Add frame overlay
+                ),
+              );
+            },
           ),
-          // 화면 중앙에 텍스트 추가
           Positioned(
             top: MediaQuery.of(context).size.height * 0.4,
             left: MediaQuery.of(context).size.width * 0.1,
@@ -256,7 +230,7 @@ class CameraAppState extends State<CameraApp> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                '와인 제품 전체가 보이도록\n정면으로 찍어주세요',
+                '와인 제품 전체가 다 보이도록\n정면으로 찍어주세요',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.black,
@@ -285,19 +259,28 @@ class CameraAppState extends State<CameraApp> {
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: 1,
+        cameras: widget.cameras,
         onItemTapped: (index) {
           switch (index) {
             case 0:
-              Navigator.pushNamed(context, Routes.home);
+              Navigator.pushReplacementNamed(context, Routes.home,
+                  arguments: widget.cameras);
               break;
             case 1:
-              Navigator.pushNamed(context, Routes.camera);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CameraApp(cameras: widget.cameras),
+                ),
+              );
               break;
             case 2:
-              Navigator.pushNamed(context, Routes.community);
+              Navigator.pushReplacementNamed(context, Routes.community,
+                  arguments: widget.cameras);
               break;
             case 3:
-              Navigator.pushNamed(context, Routes.myPage);
+              Navigator.pushReplacementNamed(context, Routes.myPage,
+                  arguments: widget.cameras);
               break;
           }
         },
@@ -314,78 +297,36 @@ class FramePainter extends CustomPainter {
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
 
-    final double cornerSize = 30;
-    final double cornerThickness = 4;
-    final width = size.width * 0.8;
-    final height = size.height * 0.5;
-    final offsetX = (size.width - width) / 2;
-    final offsetY = (size.height - height) / 2;
+    double frameSize = size.width * 0.8; // Square frame size
+    double left = (size.width - frameSize) / 2;
+    double top = (size.height - frameSize) / 2;
+    double cornerLength = 30.0; // Length of the corner lines
 
-    final rect = Rect.fromLTWH(offsetX, offsetY, width, height);
-    final RRect rrect = RRect.fromRectAndRadius(rect, Radius.circular(10));
+    // Top-left corner
+    canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), paint);
+    canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), paint);
 
-    // Draw corners
-    canvas.drawLine(
-      Offset(rrect.left, rrect.top),
-      Offset(rrect.left + cornerSize, rrect.top),
-      paint..strokeWidth = cornerThickness,
-    );
-    canvas.drawLine(
-      Offset(rrect.left, rrect.top),
-      Offset(rrect.left, rrect.top + cornerSize),
-      paint..strokeWidth = cornerThickness,
-    );
+    // Top-right corner
+    canvas.drawLine(Offset(left + frameSize, top),
+        Offset(left + frameSize - cornerLength, top), paint);
+    canvas.drawLine(Offset(left + frameSize, top),
+        Offset(left + frameSize, top + cornerLength), paint);
 
-    canvas.drawLine(
-      Offset(rrect.right, rrect.top),
-      Offset(rrect.right - cornerSize, rrect.top),
-      paint..strokeWidth = cornerThickness,
-    );
-    canvas.drawLine(
-      Offset(rrect.right, rrect.top),
-      Offset(rrect.right, rrect.top + cornerSize),
-      paint..strokeWidth = cornerThickness,
-    );
+    // Bottom-left corner
+    canvas.drawLine(Offset(left, top + frameSize),
+        Offset(left + cornerLength, top + frameSize), paint);
+    canvas.drawLine(Offset(left, top + frameSize),
+        Offset(left, top + frameSize - cornerLength), paint);
 
-    canvas.drawLine(
-      Offset(rrect.left, rrect.bottom),
-      Offset(rrect.left + cornerSize, rrect.bottom),
-      paint..strokeWidth = cornerThickness,
-    );
-    canvas.drawLine(
-      Offset(rrect.left, rrect.bottom),
-      Offset(rrect.left, rrect.bottom - cornerSize),
-      paint..strokeWidth = cornerThickness,
-    );
-
-    canvas.drawLine(
-      Offset(rrect.right, rrect.bottom),
-      Offset(rrect.right - cornerSize, rrect.bottom),
-      paint..strokeWidth = cornerThickness,
-    );
-    canvas.drawLine(
-      Offset(rrect.right, rrect.bottom),
-      Offset(rrect.right, rrect.bottom - cornerSize),
-      paint..strokeWidth = cornerThickness,
-    );
+    // Bottom-right corner
+    canvas.drawLine(Offset(left + frameSize, top + frameSize),
+        Offset(left + frameSize - cornerLength, top + frameSize), paint);
+    canvas.drawLine(Offset(left + frameSize, top + frameSize),
+        Offset(left + frameSize, top + frameSize - cornerLength), paint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
   }
-}
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final cameras = await availableCameras();
-  runApp(MaterialApp(
-    home: CameraApp(cameras: cameras),
-    routes: {
-      Routes.home: (context) => MapPage(),
-      Routes.camera: (context) => CameraApp(cameras: cameras),
-      Routes.myPage: (context) => MyPage(),
-      Routes.community: (context) => CommunityPage(),
-    },
-  ));
 }

@@ -3,18 +3,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
-import 'Camera.dart';
 import 'MyPage.dart';
 import 'Community.dart';
 import 'SettingsPage.dart';
 import 'NoticePage.dart';
 import '/utils/permision.dart';
+import 'Camera.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 
-late List<CameraDescription> cameras;
+List<CameraDescription>? cameras;
 
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  cameras = await availableCameras();
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -24,12 +29,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: Routes.home,  // 초기 경로 설정
+      home: MapPage(cameras: cameras),
       routes: {
-        Routes.home: (context) => MapPage(),
-        Routes.camera: (context) => CameraApp(cameras: cameras),
-        Routes.myPage: (context) => MyPage(),
-        Routes.community: (context) => CommunityPage(),
+        Routes.home: (context) => MapPage(cameras: cameras),
+        Routes.myPage: (context) => MyPage(cameras: cameras),
+        Routes.community: (context) => CommunityPage(cameras: cameras),
         Routes.settings: (context) => SettingsPage(),
         Routes.notice: (context) => NoticePage(),
       },
@@ -38,6 +42,10 @@ class MyApp extends StatelessWidget {
 }
 
 class MapPage extends StatefulWidget {
+  final List<CameraDescription>? cameras;
+
+  MapPage({Key? key, this.cameras}) : super(key: key);
+
   @override
   _MapPageState createState() => _MapPageState();
 }
@@ -74,17 +82,11 @@ class _MapPageState extends State<MapPage> {
           content: Text('광고 수신을 허용하시겠습니까?'),
           actions: [
             TextButton(
-              onPressed: () {
-                _setAdsConsent(false);
-                Navigator.of(context).pop();
-              },
+              onPressed: () => _setAdsConsent(false),
               child: Text('거부'),
             ),
             TextButton(
-              onPressed: () {
-                _setAdsConsent(true);
-                Navigator.of(context).pop();
-              },
+              onPressed: () => _setAdsConsent(true),
               child: Text('허용'),
             ),
           ],
@@ -97,32 +99,22 @@ class _MapPageState extends State<MapPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool('adsConsent', isConsented);
 
-    String message;
-    if (isConsented) {
-      String currentTime =
-          DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
-      prefs.setString('adsConsentTime', currentTime);
-      message = '광고 수신을 허용했습니다: $currentTime';
-    } else {
-      message = '광고 수신을 거부했습니다.';
-    }
+    String message = isConsented
+        ? '광고 수신을 허용했습니다: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}'
+        : '광고 수신을 거부했습니다.';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       print('Location services are disabled.');
       return;
     }
 
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
@@ -139,23 +131,15 @@ class _MapPageState extends State<MapPage> {
     try {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-      setState(() {
-        _currentPosition = position;
-      });
-
+      setState(() => _currentPosition = position);
       print('Current position: ${position.latitude}, ${position.longitude}');
-
-      if (_controller != null) {
-        _sendLocationToWebView(position.latitude, position.longitude);
-      }
     } catch (e) {
       print('Error getting location: $e');
     }
   }
 
   void _sendLocationToWebView(double latitude, double longitude) {
-    String jsCode =
-        "window.handleFlutterLocation($latitude, $longitude);";
+    String jsCode = "window.handleFlutterLocation($latitude, $longitude);";
     _controller.runJavascript(jsCode);
   }
 
@@ -167,7 +151,6 @@ class _MapPageState extends State<MapPage> {
         javascriptMode: JavascriptMode.unrestricted,
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
-
           if (_currentPosition != null) {
             _sendLocationToWebView(
                 _currentPosition!.latitude, _currentPosition!.longitude);
@@ -183,13 +166,21 @@ class _MapPageState extends State<MapPage> {
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
         selectedIndex: 0,
+        cameras: widget.cameras,
         onItemTapped: (index) {
           switch (index) {
             case 0:
               Navigator.pushNamed(context, Routes.home);
               break;
             case 1:
-              Navigator.pushNamed(context, Routes.camera);
+              if (widget.cameras != null && widget.cameras!.isNotEmpty) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CameraApp(cameras: widget.cameras!),
+                  ),
+                );
+              }
               break;
             case 2:
               Navigator.pushNamed(context, Routes.community);

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:camera/camera.dart'; // camera 패키지 추가
 import '/routes.dart';
 import '/widgets/BottomNavigationBar.dart';
 
 class MyPage extends StatefulWidget {
+  final List<CameraDescription>? cameras; // cameras 매개변수 추가
+
+  MyPage({Key? key, this.cameras}) : super(key: key); // 생성자 수정
+
   @override
   _MyPageState createState() => _MyPageState();
 }
@@ -16,7 +21,7 @@ class _MyPageState extends State<MyPage> {
     return Scaffold(
       body: Column(
         children: [
-          SizedBox(height: 20.0),  // 웹뷰 상단에 40.0 높이의 여백 추가
+          SizedBox(height: 20.0),
           Expanded(
             child: Stack(
               children: [
@@ -29,10 +34,10 @@ class _MyPageState extends State<MyPage> {
                   gestureNavigationEnabled: true,
                 ),
                 Positioned(
-                  top: 30.0,  // 아이콘의 상단 위치를 웹뷰 여백 이후 기준으로 설정
+                  top: 30.0,
                   right: 16.0,
                   child: IconButton(
-                    icon: Icon(Icons.settings, color: Colors.black, size: 30.0), // 아이콘 크기를 30.0으로 조절
+                    icon: Icon(Icons.settings, color: Colors.black, size: 30.0),
                     onPressed: () {
                       Navigator.pushNamed(context, Routes.settings);
                     },
@@ -44,20 +49,24 @@ class _MyPageState extends State<MyPage> {
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 3, // 적절한 인덱스로 설정
+        selectedIndex: 3,
+        cameras: widget.cameras, // cameras 매개변수 전달
         onItemTapped: (index) {
           switch (index) {
             case 0:
               Navigator.pushNamed(context, Routes.home);
               break;
             case 1:
-              Navigator.pushNamed(context, Routes.camera);
+              Navigator.pushNamed(context, Routes.camera,
+                  arguments: widget.cameras);
               break;
             case 2:
-              Navigator.pushNamed(context, Routes.community);
+              Navigator.pushNamed(context, Routes.community,
+                  arguments: widget.cameras);
               break;
             case 3:
-              Navigator.pushNamed(context, Routes.myPage);
+              Navigator.pushNamed(context, Routes.myPage,
+                  arguments: widget.cameras);
               break;
           }
         },

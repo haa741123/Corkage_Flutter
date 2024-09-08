@@ -7,27 +7,14 @@ import '/screens/MyPage.dart';
 import '/screens/Community.dart';
 import '/screens/SettingsPage.dart';
 import '/screens/NoticePage.dart';
-import '/screens/login.dart'; // Import the login page
+import '/screens/Login.dart';
 import 'package:camera/camera.dart';
 
-class CameraService {
-  static final CameraService _instance = CameraService._internal();
-  late List<CameraDescription> cameras;
+List<CameraDescription>? cameras;
 
-  factory CameraService() {
-    return _instance;
-  }
-
-  CameraService._internal();
-
-  Future<void> initializeCameras() async {
-    cameras = await availableCameras();
-  }
-}
-
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await CameraService().initializeCameras();
+  cameras = await availableCameras();
   runApp(MyApp());
 }
 
@@ -36,21 +23,31 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter WebView Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/',
       routes: {
         '/': (context) => SplashScreen(),
-        '/map': (context) => MapPage(),
-        Routes.home: (context) => MapPage(),
-        Routes.camera: (context) => CameraApp(cameras: CameraService().cameras),
-        Routes.myPage: (context) => MyPage(),
-        Routes.community: (context) => CommunityPage(),
+        '/map': (context) => MapPage(cameras: cameras),
+        Routes.home: (context) => MapPage(cameras: cameras),
+        Routes.camera: (context) =>
+            cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
+        Routes.myPage: (context) => MyPage(cameras: cameras),
+        Routes.community: (context) => CommunityPage(cameras: cameras),
         Routes.settings: (context) => SettingsPage(),
         Routes.notice: (context) => NoticePage(),
-        Routes.login: (context) => Login(), // Integrate LoginPage route
+        Routes.login: (context) => Login(),
       },
+    );
+  }
+}
+
+class ErrorPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Error")),
+      body: Center(
+          child: Text("No cameras available. Please check device settings.")),
     );
   }
 }
@@ -70,8 +67,6 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _startSplashScreenTimer() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isFirstRun = prefs.getBool('isFirstRun') ?? true;
-
-    // Display splash for 3 seconds and then navigate
     Future.delayed(Duration(seconds: 3), () {
       if (isFirstRun) {
         prefs.setBool('isFirstRun', false);
@@ -82,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen> {
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => MapPage()),
+          MaterialPageRoute(builder: (context) => MapPage(cameras: cameras)),
         );
       }
     });
@@ -93,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Center(
         child: Image.asset(
-          'assets/spl.png', // Path to your splash image
+          'assets/splash.png',
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
@@ -125,12 +120,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
               });
             },
             children: [
-              _buildPage(
-                imagePath: 'assets/onboarding1.png',
-              ),
-              _buildPage(
-                imagePath: 'assets/onboarding2.png',
-              ),
+              _buildPage(imagePath: 'assets/onboarding1.png'),
+              _buildPage(imagePath: 'assets/onboarding2.png'),
             ],
           ),
           Align(
@@ -142,8 +133,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: _currentPage == 1
                   ? TextButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(
-                            context, Routes.login); // Navigate to login page
+                        Navigator.pushReplacementNamed(context, Routes.login);
                       },
                       child: Text(
                         '카카오톡으로 3초 회원가입',
@@ -175,9 +165,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildPage({
-    required String imagePath,
-  }) {
+  Widget _buildPage({required String imagePath}) {
     return Container(
       color: Colors.white,
       child: Center(

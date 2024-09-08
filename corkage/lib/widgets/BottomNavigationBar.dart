@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 import '/routes.dart';
 import '/screens/Community.dart';
 import '/screens/MyPage.dart';
@@ -8,20 +9,21 @@ import '/screens/Map.dart';
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onItemTapped;
+  final List<CameraDescription>? cameras;
 
   const CustomBottomNavigationBar({
     Key? key,
     required this.selectedIndex,
     required this.onItemTapped,
+    required this.cameras,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       onTap: (int index) {
-        onItemTapped(index); // 인덱스를 전달하여 외부에서 추가 작업을 수행할 수 있도록 함
+        onItemTapped(index);
 
-        // 페이지 전환 애니메이션을 없앰
         Route route;
         switch (index) {
           case 0:
@@ -45,28 +47,28 @@ class CustomBottomNavigationBar extends StatelessWidget {
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
           icon: Icon(Icons.map),
-          label: '', // 라벨을 빈 문자열로 설정하여 제거
+          label: '',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.camera),
-          label: '', // 라벨을 빈 문자열로 설정하여 제거
+          label: '',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.group),
-          label: '', // 라벨을 빈 문자열로 설정하여 제거
+          label: '',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
-          label: '', // 라벨을 빈 문자열로 설정하여 제거
+          label: '',
         ),
       ],
       currentIndex: selectedIndex,
-      selectedItemColor: Colors.red, // 선택된 아이템 색상
-      unselectedItemColor: Colors.black, // 선택되지 않은 아이템 색상
-      backgroundColor: Colors.white, // 하단 바 배경색을 하얀색으로 설정
-      showSelectedLabels: false, // 선택된 아이템의 라벨을 숨김
-      showUnselectedLabels: false, // 선택되지 않은 아이템의 라벨을 숨김
-      type: BottomNavigationBarType.fixed, // 높이가 변하지 않도록 설정
+      selectedItemColor: Colors.red,
+      unselectedItemColor: Colors.black,
+      backgroundColor: Colors.white,
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
+      type: BottomNavigationBarType.fixed,
     );
   }
 
@@ -74,23 +76,25 @@ class CustomBottomNavigationBar extends StatelessWidget {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
           _getPage(routeName),
-      transitionDuration: Duration.zero, // 전환 애니메이션 지속 시간을 0으로 설정
-      reverseTransitionDuration: Duration.zero, // 뒤로 가기 애니메이션 지속 시간을 0으로 설정
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
     );
   }
 
   Widget _getPage(String routeName) {
     switch (routeName) {
       case Routes.home:
-        return MapPage();
+        return MapPage(cameras: cameras);
       case Routes.camera:
-        return CameraApp(cameras: cameras);
+        return cameras != null && cameras!.isNotEmpty
+            ? CameraApp(cameras: cameras!)
+            : Center(child: Text('카메라를 사용할 수 없습니다.'));
       case Routes.community:
-        return CommunityPage();
+        return CommunityPage(cameras: cameras);
       case Routes.myPage:
-        return MyPage();
+        return MyPage(cameras: cameras);
       default:
-        return MapPage();
+        return MapPage(cameras: cameras);
     }
   }
 }
