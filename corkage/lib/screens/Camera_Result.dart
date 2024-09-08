@@ -26,55 +26,63 @@ class _CameraResultPageState extends State<CameraResultPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              SizedBox(height: 80.0),
-              Expanded(
-                child: Stack(
-                  children: [
-                    WebView(
-                      initialUrl:
-                          'https://corkage.store/drink_info?search=${Uri.encodeComponent(widget.extractedText)}',
-                      javascriptMode: JavascriptMode.unrestricted,
-                      onWebViewCreated: (WebViewController webViewController) {
-                        _controller = webViewController;
-                      },
-                      onPageFinished: (String url) {
-                        setState(() {
-                          isLoading = false;
-                        });
-                      },
-                      gestureNavigationEnabled: true,
-                    ),
-                    if (isLoading)
-                      Center(
-                        child: CircularProgressIndicator(),
+    return WillPopScope(
+      onWillPop: () async {
+        _navigateBackToCamera();
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                SizedBox(height: 80.0),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      WebView(
+                        initialUrl:
+                            'https://corkage.store/drink_info?search=${Uri.encodeComponent(widget.extractedText)}',
+                        javascriptMode: JavascriptMode.unrestricted,
+                        onWebViewCreated:
+                            (WebViewController webViewController) {
+                          _controller = webViewController;
+                        },
+                        onPageFinished: (String url) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                        },
+                        gestureNavigationEnabled: true,
                       ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            top: 30.0,
-            left: 10.0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.black, size: 30.0),
-              onPressed: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(
-                    builder: (context) => CameraApp(cameras: widget.cameras),
+                      if (isLoading)
+                        Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                    ],
                   ),
-                  (Route<dynamic> route) => false,
-                );
-              },
+                ),
+              ],
             ),
-          ),
-        ],
+            Positioned(
+              top: 30.0,
+              left: 10.0,
+              child: IconButton(
+                icon: Icon(Icons.arrow_back, color: Colors.black, size: 30.0),
+                onPressed: _navigateBackToCamera,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateBackToCamera() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => CameraApp(cameras: widget.cameras),
       ),
     );
   }

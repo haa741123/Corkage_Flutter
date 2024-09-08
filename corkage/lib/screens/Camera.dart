@@ -50,7 +50,6 @@ class ErrorPage extends StatelessWidget {
 
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
-
   const CameraApp({Key? key, required this.cameras}) : super(key: key);
 
   @override
@@ -104,7 +103,6 @@ class CameraAppState extends State<CameraApp> {
       print('Camera is not initialized.');
       return;
     }
-
     try {
       showDialog(
         context: context,
@@ -115,28 +113,24 @@ class CameraAppState extends State<CameraApp> {
           );
         },
       );
-
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
-
       final extractedText = await _performOCR(image);
-
       if (mounted) {
         Navigator.of(context).pop();
-      }
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CameraResultPage(
-            imagePath: image.path,
-            extractedText: extractedText,
-            cameras: widget.cameras,
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CameraResultPage(
+              imagePath: image.path,
+              extractedText: extractedText,
+              cameras: widget.cameras,
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
       print('Error taking picture: $e');
       if (mounted) {
@@ -149,7 +143,6 @@ class CameraAppState extends State<CameraApp> {
     try {
       final bytes = await File(image.path).readAsBytes();
       final base64Image = base64Encode(bytes);
-
       final url =
           'https://vision.googleapis.com/v1/images:annotate?key=YOUR_API_KEY';
       final request = {
@@ -162,13 +155,11 @@ class CameraAppState extends State<CameraApp> {
           }
         ]
       };
-
       final response = await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(request),
       );
-
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
         return result['responses'][0]['textAnnotations'][0]['description'];
@@ -185,7 +176,6 @@ class CameraAppState extends State<CameraApp> {
       final offset = details.localPosition;
       final double x = offset.dx / constraints.maxWidth;
       final double y = offset.dy / constraints.maxHeight;
-
       controller.setFocusPoint(Offset(x, y));
     }
   }
@@ -195,11 +185,9 @@ class CameraAppState extends State<CameraApp> {
     if (errorMessage.isNotEmpty) {
       return Center(child: Text(errorMessage));
     }
-
     if (!controller.value.isInitialized) {
       return Center(child: CircularProgressIndicator());
     }
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -214,7 +202,7 @@ class CameraAppState extends State<CameraApp> {
                 onTapDown: (details) => _onViewFinderTap(details, constraints),
                 child: CustomPaint(
                   size: Size.infinite,
-                  painter: FramePainter(), // Add frame overlay
+                  painter: FramePainter(),
                 ),
               );
             },
@@ -296,28 +284,24 @@ class FramePainter extends CustomPainter {
       ..color = Colors.white
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
-
-    double frameSize = size.width * 0.8; // Square frame size
+    double frameSize = size.width * 0.8;
     double left = (size.width - frameSize) / 2;
     double top = (size.height - frameSize) / 2;
-    double cornerLength = 30.0; // Length of the corner lines
+    double cornerLength = 30.0;
 
     // Top-left corner
     canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), paint);
-
     // Top-right corner
     canvas.drawLine(Offset(left + frameSize, top),
         Offset(left + frameSize - cornerLength, top), paint);
     canvas.drawLine(Offset(left + frameSize, top),
         Offset(left + frameSize, top + cornerLength), paint);
-
     // Bottom-left corner
     canvas.drawLine(Offset(left, top + frameSize),
         Offset(left + cornerLength, top + frameSize), paint);
     canvas.drawLine(Offset(left, top + frameSize),
         Offset(left, top + frameSize - cornerLength), paint);
-
     // Bottom-right corner
     canvas.drawLine(Offset(left + frameSize, top + frameSize),
         Offset(left + frameSize - cornerLength, top + frameSize), paint);
