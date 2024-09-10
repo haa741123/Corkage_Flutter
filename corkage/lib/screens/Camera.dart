@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:device_info_plus/device_info_plus.dart';
 import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
 import 'Camera_Result.dart';
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter WebView Example',
+      title: 'Flutter Camera App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -60,11 +60,21 @@ class CameraAppState extends State<CameraApp> {
   late CameraController controller;
   String errorMessage = '';
   XFile? imageFile;
+  String androidId = 'unknown';
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
+    _getAndroidId();
+  }
+
+  Future<void> _getAndroidId() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    setState(() {
+      androidId = androidInfo.id ?? 'unknown';
+    });
   }
 
   Future<void> _initializeCamera() async {
@@ -92,9 +102,7 @@ class CameraAppState extends State<CameraApp> {
 
   @override
   void dispose() {
-    if (controller.value.isInitialized) {
-      controller.dispose();
-    }
+    controller.dispose();
     super.dispose();
   }
 
@@ -117,57 +125,62 @@ class CameraAppState extends State<CameraApp> {
       setState(() {
         imageFile = image;
       });
-      final extractedText = await _performOCR(image);
+      bool uploadSuccess = await _uploadImage(image.path);
       if (mounted) {
-        Navigator.of(context).pop();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CameraResultPage(
-              imagePath: image.path,
-              extractedText: extractedText,
-              cameras: widget.cameras,
+        Navigator.of(context).pop(); // Close the loading dialog
+        if (uploadSuccess) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CameraResultPage(
+                imagePath: image.path,
+                extractedText: 'Image uploaded successfully',
+                cameras: widget.cameras,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload image')),
+          );
+        }
       }
     } catch (e) {
       print('Error taking picture: $e');
       if (mounted) {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Close the loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to take picture: $e')),
+        );
       }
     }
   }
 
-  Future<String> _performOCR(XFile image) async {
+  Future<bool> _uploadImage(String imagePath) async {
     try {
-      final bytes = await File(image.path).readAsBytes();
-      final base64Image = base64Encode(bytes);
-      final url =
-          'https://vision.googleapis.com/v1/images:annotate?key=YOUR_API_KEY';
-      final request = {
-        "requests": [
-          {
-            "image": {"content": base64Image},
-            "features": [
-              {"type": "TEXT_DETECTION"}
-            ]
-          }
-        ]
-      };
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(request),
-      );
+      final url = Uri.parse('https://corkage.store/upload');
+      var request = http.MultipartRequest('POST', url);
+      request.files.add(await http.MultipartFile.fromPath('image', imagePath,
+          filename: '$androidId.jpg'));
+
+      print('업로드 요청 시작: $url');
+      var response = await request.send();
+      var responseBody = await response.stream.bytesToString();
+
+      print('서버 응답 상태 코드: ${response.statusCode}');
+      print('서버 응답 내용: $responseBody');
+
       if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        return result['responses'][0]['textAnnotations'][0]['description'];
+        print('이미지 업로드 성공');
+        return true;
       } else {
-        return 'Unable to extract text.';
+        print('이미지 업로드 실패: 상태 코드 ${response.statusCode}');
+        return false;
       }
-    } catch (e) {
-      return 'OCR error: $e';
+    } catch (e, stackTrace) {
+      print('이미지 업로드 중 오류 발생: $e');
+      print('스택 트레이스: $stackTrace');
+      return false;
     }
   }
 
@@ -288,7 +301,6 @@ class FramePainter extends CustomPainter {
     double left = (size.width - frameSize) / 2;
     double top = (size.height - frameSize) / 2;
     double cornerLength = 30.0;
-
     // Top-left corner
     canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), paint);
