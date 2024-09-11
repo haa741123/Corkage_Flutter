@@ -12,20 +12,20 @@ import 'Map.dart';
 
 List<CameraDescription>? cameras;
 
+// 메인 함수
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
   runApp(MyApp());
 }
 
+// 메인 앱 위젯
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Camera App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
       routes: {
         Routes.home: (context) => MapPage(cameras: cameras),
@@ -38,6 +38,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// 에러 페이지
 class ErrorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -48,6 +49,7 @@ class ErrorPage extends StatelessWidget {
   }
 }
 
+// 카메라 앱 위젯
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
   const CameraApp({Key? key, required this.cameras}) : super(key: key);
@@ -69,6 +71,7 @@ class CameraAppState extends State<CameraApp> {
     _getAndroidId();
   }
 
+  // 안드로이드 ID 가져오기
   Future<void> _getAndroidId() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -77,6 +80,7 @@ class CameraAppState extends State<CameraApp> {
     });
   }
 
+  // 카메라 초기화
   Future<void> _initializeCamera() async {
     if (widget.cameras.isNotEmpty) {
       controller = CameraController(
@@ -106,28 +110,31 @@ class CameraAppState extends State<CameraApp> {
     super.dispose();
   }
 
+  // 사진 촬영
   Future<void> _takePicture() async {
     if (!controller.value.isInitialized) {
       print('Camera is not initialized.');
       return;
     }
+
     try {
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return Center(
-            child: CircularProgressIndicator(),
-          );
+          return Center(child: CircularProgressIndicator());
         },
       );
+
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
+
       bool uploadSuccess = await _uploadImage(image.path);
+
       if (mounted) {
-        Navigator.of(context).pop(); // Close the loading dialog
+        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
         if (uploadSuccess) {
           Navigator.push(
             context,
@@ -148,7 +155,7 @@ class CameraAppState extends State<CameraApp> {
     } catch (e) {
       print('Error taking picture: $e');
       if (mounted) {
-        Navigator.of(context).pop(); // Close the loading dialog
+        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to take picture: $e')),
         );
@@ -156,6 +163,7 @@ class CameraAppState extends State<CameraApp> {
     }
   }
 
+  // 이미지 업로드
   Future<bool> _uploadImage(String imagePath) async {
     try {
       final url = Uri.parse('https://corkage.store/upload');
@@ -166,7 +174,6 @@ class CameraAppState extends State<CameraApp> {
       print('업로드 요청 시작: $url');
       var response = await request.send();
       var responseBody = await response.stream.bytesToString();
-
       print('서버 응답 상태 코드: ${response.statusCode}');
       print('서버 응답 내용: $responseBody');
 
@@ -184,6 +191,7 @@ class CameraAppState extends State<CameraApp> {
     }
   }
 
+  // 뷰파인더 탭 시 포커스 설정
   void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
     if (controller.value.isInitialized) {
       final offset = details.localPosition;
@@ -198,9 +206,11 @@ class CameraAppState extends State<CameraApp> {
     if (errorMessage.isNotEmpty) {
       return Center(child: Text(errorMessage));
     }
+
     if (!controller.value.isInitialized) {
       return Center(child: CircularProgressIndicator());
     }
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -290,6 +300,7 @@ class CameraAppState extends State<CameraApp> {
   }
 }
 
+// 카메라 프레임 그리기
 class FramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -301,20 +312,18 @@ class FramePainter extends CustomPainter {
     double left = (size.width - frameSize) / 2;
     double top = (size.height - frameSize) / 2;
     double cornerLength = 30.0;
-    // Top-left corner
+
+    // 프레임 모서리 그리기
     canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), paint);
-    // Top-right corner
     canvas.drawLine(Offset(left + frameSize, top),
         Offset(left + frameSize - cornerLength, top), paint);
     canvas.drawLine(Offset(left + frameSize, top),
         Offset(left + frameSize, top + cornerLength), paint);
-    // Bottom-left corner
     canvas.drawLine(Offset(left, top + frameSize),
         Offset(left + cornerLength, top + frameSize), paint);
     canvas.drawLine(Offset(left, top + frameSize),
         Offset(left, top + frameSize - cornerLength), paint);
-    // Bottom-right corner
     canvas.drawLine(Offset(left + frameSize, top + frameSize),
         Offset(left + frameSize - cornerLength, top + frameSize), paint);
     canvas.drawLine(Offset(left + frameSize, top + frameSize),
