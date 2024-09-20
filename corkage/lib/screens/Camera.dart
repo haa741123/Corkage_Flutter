@@ -9,17 +9,16 @@ import 'Camera_Result.dart';
 import 'MyPage.dart';
 import 'Community.dart';
 import 'Map.dart';
+import 'dart:convert';
 
 List<CameraDescription>? cameras;
 
-// 메인 함수
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
   runApp(MyApp());
 }
 
-// 메인 앱 위젯
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -38,7 +37,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// 에러 페이지
 class ErrorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -49,7 +47,6 @@ class ErrorPage extends StatelessWidget {
   }
 }
 
-// 카메라 앱 위젯
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
   const CameraApp({Key? key, required this.cameras}) : super(key: key);
@@ -71,7 +68,6 @@ class CameraAppState extends State<CameraApp> {
     _getAndroidId();
   }
 
-  // 안드로이드 ID 가져오기
   Future<void> _getAndroidId() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -80,7 +76,6 @@ class CameraAppState extends State<CameraApp> {
     });
   }
 
-  // 카메라 초기화
   Future<void> _initializeCamera() async {
     if (widget.cameras.isNotEmpty) {
       controller = CameraController(
@@ -110,7 +105,6 @@ class CameraAppState extends State<CameraApp> {
     super.dispose();
   }
 
-  // 사진 촬영
   Future<void> _takePicture() async {
     if (!controller.value.isInitialized) {
       print('Camera is not initialized.');
@@ -125,27 +119,39 @@ class CameraAppState extends State<CameraApp> {
           return Center(child: CircularProgressIndicator());
         },
       );
-
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
-
       bool uploadSuccess = await _uploadImage(image.path);
-
       if (mounted) {
         Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
         if (uploadSuccess) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CameraResultPage(
-                imagePath: image.path,
-                extractedText: 'Image uploaded successfully',
-                cameras: widget.cameras,
+          final response = await http
+              .get(Uri.parse('https://corkage.store/api/v1/get_ocr_result'));
+          if (response.statusCode == 200) {
+            final resultData = json.decode(response.body);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CameraResultPage(
+                  imagePath: image.path,
+                  extractedText:
+                      resultData['extracted_text'] ?? 'No text extracted',
+                  cameras: widget.cameras,
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            print(
+                'Failed to get OCR result. Status code: ${response.statusCode}');
+            print('Response body: ${response.body}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content:
+                      Text('Failed to get OCR result: ${response.statusCode}')),
+            );
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to upload image')),
@@ -163,35 +169,39 @@ class CameraAppState extends State<CameraApp> {
     }
   }
 
-  // 이미지 업로드
   Future<bool> _uploadImage(String imagePath) async {
     try {
-      final url = Uri.parse('https://corkage.store/upload');
+      final url = Uri.parse('https://corkage.store/api/v1/detect');
       var request = http.MultipartRequest('POST', url);
       request.files.add(await http.MultipartFile.fromPath('image', imagePath,
           filename: '$androidId.jpg'));
-
       print('업로드 요청 시작: $url');
       var response = await request.send();
       var responseBody = await response.stream.bytesToString();
       print('서버 응답 상태 코드: ${response.statusCode}');
       print('서버 응답 내용: $responseBody');
-
       if (response.statusCode == 200) {
         print('이미지 업로드 성공');
         return true;
       } else {
         print('이미지 업로드 실패: 상태 코드 ${response.statusCode}');
+        print('응답 내용: $responseBody');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('서버 오류: ${response.statusCode}. 나중에 다시 시도해주세요.')),
+        );
         return false;
       }
     } catch (e, stackTrace) {
       print('이미지 업로드 중 오류 발생: $e');
       print('스택 트레이스: $stackTrace');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('네트워크 오류: $e')),
+      );
       return false;
     }
   }
 
-  // 뷰파인더 탭 시 포커스 설정
   void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
     if (controller.value.isInitialized) {
       final offset = details.localPosition;
@@ -300,7 +310,6 @@ class CameraAppState extends State<CameraApp> {
   }
 }
 
-// 카메라 프레임 그리기
 class FramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
