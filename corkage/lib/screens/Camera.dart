@@ -10,6 +10,7 @@ import 'MyPage.dart';
 import 'Community.dart';
 import 'Map.dart';
 import 'dart:convert';
+import 'package:webview_flutter/webview_flutter.dart';
 
 List<CameraDescription>? cameras;
 
@@ -105,66 +106,68 @@ class CameraAppState extends State<CameraApp> {
     super.dispose();
   }
 
-  Future<void> _takePicture() async {
+  Future _takePicture() async {
     if (!controller.value.isInitialized) {
       print('Camera is not initialized.');
       return;
     }
 
     try {
+      // 로딩 다이얼로그 표시
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return Center(child: CircularProgressIndicator());
+          return Dialog(
+            backgroundColor: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('이미지 업로드 중...'),
+                ],
+              ),
+            ),
+          );
         },
       );
+
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
+
       bool uploadSuccess = await _uploadImage(image.path);
+
       if (mounted) {
         Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+
         if (uploadSuccess) {
-          final response = await http
-              .get(Uri.parse('https://corkage.store/api/v1/get_ocr_result'));
-          if (response.statusCode == 200) {
-            final resultData = json.decode(response.body);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => CameraResultPage(
-                  imagePath: image.path,
-                  extractedText:
-                      resultData['extracted_text'] ?? 'No text extracted',
-                  cameras: widget.cameras,
+          // 웹뷰 표시
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Scaffold(
+                appBar: AppBar(),
+                body: WebView(
+                  initialUrl: 'https://corkage.store/drink_info',
+                  javascriptMode: JavascriptMode.unrestricted,
                 ),
               ),
-            );
-          } else {
-            print(
-                'Failed to get OCR result. Status code: ${response.statusCode}');
-            print('Response body: ${response.body}');
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content:
-                      Text('Failed to get OCR result: ${response.statusCode}')),
-            );
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload image')),
+            ),
           );
+        } else {
+          _showErrorMessage('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
         }
       }
     } catch (e) {
       print('Error taking picture: $e');
       if (mounted) {
         Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to take picture: $e')),
-        );
+        _showErrorMessage('사진 촬영에 실패했습니다: $e');
       }
     }
   }
@@ -186,20 +189,25 @@ class CameraAppState extends State<CameraApp> {
       } else {
         print('이미지 업로드 실패: 상태 코드 ${response.statusCode}');
         print('응답 내용: $responseBody');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('서버 오류: ${response.statusCode}. 나중에 다시 시도해주세요.')),
-        );
+        _showErrorMessage('서버 오류: ${response.statusCode}. 나중에 다시 시도해주세요.');
         return false;
       }
     } catch (e, stackTrace) {
       print('이미지 업로드 중 오류 발생: $e');
       print('스택 트레이스: $stackTrace');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('네트워크 오류: $e')),
-      );
+      _showErrorMessage('네트워크 오류: $e');
       return false;
     }
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
 
   void _onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
@@ -321,7 +329,6 @@ class FramePainter extends CustomPainter {
     double left = (size.width - frameSize) / 2;
     double top = (size.height - frameSize) / 2;
     double cornerLength = 30.0;
-
     // 프레임 모서리 그리기
     canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), paint);
