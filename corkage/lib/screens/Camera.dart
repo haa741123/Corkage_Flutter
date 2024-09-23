@@ -189,7 +189,7 @@ class CameraAppState extends State<CameraApp> {
       } else {
         print('이미지 업로드 실패: 상태 코드 ${response.statusCode}');
         print('응답 내용: $responseBody');
-        _showErrorMessage('서버 오류: ${response.statusCode}. 나중에 다시 시도해주세요.');
+        // _showErrorMessage('서버 오류: ${response.statusCode}. 나중에 다시 시도해주세요.');
         return false;
       }
     } catch (e, stackTrace) {
