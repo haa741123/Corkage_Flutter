@@ -4,7 +4,7 @@ import 'screens/Map.dart';
 import '/routes.dart';
 import '/screens/Camera.dart';
 import '/screens/MyPage.dart';
-import '/screens/Community.dart';
+import '/screens/Index.dart';
 import '/screens/SettingsPage.dart';
 import '/screens/NoticePage.dart';
 import '/screens/Login.dart';
@@ -27,12 +27,12 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => SplashScreen(),
-        '/map': (context) => MapPage(cameras: cameras),
-        Routes.home: (context) => MapPage(cameras: cameras),
+        '/index': (context) => IndexPage(cameras: cameras),
+        Routes.home: (context) => IndexPage(cameras: cameras),
         Routes.camera: (context) =>
             cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
         Routes.myPage: (context) => MyPage(cameras: cameras),
-        Routes.community: (context) => CommunityPage(cameras: cameras),
+        Routes.map: (context) => MapPage(cameras: cameras),
         Routes.settings: (context) => SettingsPage(),
         Routes.notice: (context) => NoticePage(),
         Routes.login: (context) => Login(),

@@ -57,13 +57,14 @@ class _MyPageState extends State<MyPage> {
               Navigator.pushNamed(context, Routes.home);
               break;
             case 1:
-              Navigator.pushNamed(context, Routes.camera,
+              Navigator.pushNamed(context, Routes.map,
                   arguments: widget.cameras);
               break;
             case 2:
-              Navigator.pushNamed(context, Routes.community,
+              Navigator.pushNamed(context, Routes.camera,
                   arguments: widget.cameras);
               break;
+
             case 3:
               Navigator.pushNamed(context, Routes.myPage,
                   arguments: widget.cameras);

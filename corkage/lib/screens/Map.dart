@@ -4,7 +4,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
 import 'MyPage.dart';
-import 'Community.dart';
+import 'Index.dart';
 import 'SettingsPage.dart';
 import 'NoticePage.dart';
 import '/utils/permision.dart';
@@ -31,9 +31,9 @@ class MyApp extends StatelessWidget {
       ),
       home: MapPage(cameras: cameras),
       routes: {
-        Routes.home: (context) => MapPage(cameras: cameras),
+        Routes.home: (context) => IndexPage(cameras: cameras),
         Routes.myPage: (context) => MyPage(cameras: cameras),
-        Routes.community: (context) => CommunityPage(cameras: cameras),
+        Routes.map: (context) => MapPage(cameras: cameras),
         Routes.settings: (context) => SettingsPage(),
         Routes.notice: (context) => NoticePage(),
       },
@@ -173,14 +173,19 @@ class _MapPageState extends State<MapPage> {
         gestureNavigationEnabled: true,
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 0,
+        selectedIndex: 1,
         cameras: widget.cameras,
         onItemTapped: (index) {
           switch (index) {
             case 0:
               Navigator.pushNamed(context, Routes.home);
               break;
+
             case 1:
+              Navigator.pushNamed(context, Routes.map);
+              break;
+
+            case 2:
               if (widget.cameras != null && widget.cameras!.isNotEmpty) {
                 Navigator.push(
                   context,
@@ -190,9 +195,7 @@ class _MapPageState extends State<MapPage> {
                 );
               }
               break;
-            case 2:
-              Navigator.pushNamed(context, Routes.community);
-              break;
+
             case 3:
               Navigator.pushNamed(context, Routes.myPage);
               break;

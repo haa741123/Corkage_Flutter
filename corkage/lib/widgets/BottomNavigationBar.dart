@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:camera/camera.dart';
 import '/routes.dart';
-import '/screens/Community.dart';
+import '/screens/Index.dart';
 import '/screens/MyPage.dart';
 import '/screens/Camera.dart';
 import '/screens/Map.dart';
@@ -31,10 +31,10 @@ class CustomBottomNavigationBar extends StatelessWidget {
             route = _noAnimationRoute(Routes.home);
             break;
           case 1:
-            route = _noAnimationRoute(Routes.camera);
+            route = _noAnimationRoute(Routes.map);
             break;
           case 2:
-            route = _noAnimationRoute(Routes.community);
+            route = _noAnimationRoute(Routes.camera);
             break;
           case 3:
             route = _noAnimationRoute(Routes.myPage);
@@ -111,13 +111,13 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget _getPage(String routeName) {
     switch (routeName) {
       case Routes.home:
+        return IndexPage(cameras: cameras);
+      case Routes.map:
         return MapPage(cameras: cameras);
       case Routes.camera:
         return cameras != null && cameras!.isNotEmpty
             ? CameraApp(cameras: cameras!)
             : Center(child: Text('카메라를 사용할 수 없습니다.'));
-      case Routes.community:
-        return CommunityPage(cameras: cameras);
       case Routes.myPage:
         return MyPage(cameras: cameras);
       default:

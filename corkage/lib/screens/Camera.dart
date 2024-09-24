@@ -7,7 +7,7 @@ import '/widgets/BottomNavigationBar.dart';
 import '/routes.dart';
 import 'Camera_Result.dart';
 import 'MyPage.dart';
-import 'Community.dart';
+import 'Index.dart';
 import 'Map.dart';
 import 'dart:convert';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         Routes.camera: (context) =>
             cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
         Routes.myPage: (context) => MyPage(cameras: cameras),
-        Routes.community: (context) => CommunityPage(cameras: cameras),
+        Routes.map: (context) => MapPage(cameras: cameras),
       },
     );
   }
@@ -287,7 +287,7 @@ class CameraAppState extends State<CameraApp> {
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
-        selectedIndex: 1,
+        selectedIndex: 2,
         cameras: widget.cameras,
         onItemTapped: (index) {
           switch (index) {
@@ -296,6 +296,10 @@ class CameraAppState extends State<CameraApp> {
                   arguments: widget.cameras);
               break;
             case 1:
+              Navigator.pushReplacementNamed(context, Routes.map,
+                  arguments: widget.cameras);
+              break;
+            case 2:
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -303,10 +307,7 @@ class CameraAppState extends State<CameraApp> {
                 ),
               );
               break;
-            case 2:
-              Navigator.pushReplacementNamed(context, Routes.community,
-                  arguments: widget.cameras);
-              break;
+
             case 3:
               Navigator.pushReplacementNamed(context, Routes.myPage,
                   arguments: widget.cameras);
