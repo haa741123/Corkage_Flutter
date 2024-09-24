@@ -75,10 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
           MaterialPageRoute(builder: (context) => OnboardingPage()),
         );
       } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MapPage(cameras: cameras)),
-        );
+        Navigator.pushReplacementNamed(context, Routes.home);
       }
     });
   }
@@ -133,7 +130,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: _currentPage == 1
                   ? TextButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, Routes.login);
+                        Navigator.pushReplacementNamed(context, Routes.home);
                       },
                       child: Text(
                         '카카오톡으로 3초 회원가입',
