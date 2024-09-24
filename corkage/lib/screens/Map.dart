@@ -76,17 +76,24 @@ class _MapPageState extends State<MapPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
+        // dialogContext 사용
         return AlertDialog(
           title: Text('광고 수신 동의'),
           content: Text('광고 수신을 허용하시겠습니까?'),
           actions: [
             TextButton(
-              onPressed: () => _setAdsConsent(false),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // dialogContext 사용
+                _setAdsConsent(false);
+              },
               child: Text('거부'),
             ),
             TextButton(
-              onPressed: () => _setAdsConsent(true),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // dialogContext 사용
+                _setAdsConsent(true);
+              },
               child: Text('허용'),
             ),
           ],
@@ -103,6 +110,7 @@ class _MapPageState extends State<MapPage> {
         ? '광고 수신을 허용했습니다: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}'
         : '광고 수신을 거부했습니다.';
 
+    // SnackBar 표시
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
