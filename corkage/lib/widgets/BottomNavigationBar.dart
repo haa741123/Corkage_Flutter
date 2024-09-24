@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:camera/camera.dart';
 import '/routes.dart';
 import '/screens/Community.dart';
@@ -24,7 +25,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
       onTap: (int index) {
         onItemTapped(index);
 
-        Route route;
+        Route? route;
         switch (index) {
           case 0:
             route = _noAnimationRoute(Routes.home);
@@ -42,23 +43,49 @@ class CustomBottomNavigationBar extends StatelessWidget {
             return;
         }
 
-        Navigator.pushReplacement(context, route);
+        if (route != null) {
+          Navigator.pushReplacement(context, route);
+        }
       },
-      items: const <BottomNavigationBarItem>[
+      items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-          icon: Icon(Icons.map),
+          icon: SvgPicture.asset(
+            selectedIndex == 0
+                ? 'assets/icons/Home_selected.svg'
+                : 'assets/icons/Home.svg',
+            width: 24,
+            height: 24,
+          ),
           label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.camera),
+          icon: SvgPicture.asset(
+            selectedIndex == 1
+                ? 'assets/icons/Location_selected.svg'
+                : 'assets/icons/Location.svg',
+            width: 24,
+            height: 24,
+          ),
           label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.group),
+          icon: SvgPicture.asset(
+            selectedIndex == 2
+                ? 'assets/icons/Scan_selected.svg'
+                : 'assets/icons/Scan.svg',
+            width: 24,
+            height: 24,
+          ),
           label: '',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
+          icon: SvgPicture.asset(
+            selectedIndex == 3
+                ? 'assets/icons/Profile_selected.svg'
+                : 'assets/icons/Profile.svg',
+            width: 24,
+            height: 24,
+          ),
           label: '',
         ),
       ],
@@ -72,7 +99,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
     );
   }
 
-  Route _noAnimationRoute(String routeName) {
+  Route? _noAnimationRoute(String routeName) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
           _getPage(routeName),
