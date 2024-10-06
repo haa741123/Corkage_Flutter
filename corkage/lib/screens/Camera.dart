@@ -38,6 +38,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// 카메라 오류 시 표시할 페이지
 class ErrorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -48,6 +49,7 @@ class ErrorPage extends StatelessWidget {
   }
 }
 
+// 카메라 기능을 제공하는 StatefulWidget
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
   const CameraApp({Key? key, required this.cameras}) : super(key: key);
@@ -56,6 +58,7 @@ class CameraApp extends StatefulWidget {
   State<CameraApp> createState() => CameraAppState();
 }
 
+// 카메라 초기화 및 사진 촬영 기능을 담당
 class CameraAppState extends State<CameraApp> {
   late CameraController controller;
   String errorMessage = '';
@@ -69,6 +72,7 @@ class CameraAppState extends State<CameraApp> {
     _getAndroidId();
   }
 
+  // 안드로이드 디바이스 ID를 가져오는 함수
   Future<void> _getAndroidId() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -77,6 +81,7 @@ class CameraAppState extends State<CameraApp> {
     });
   }
 
+  // 카메라 초기화
   Future<void> _initializeCamera() async {
     if (widget.cameras.isNotEmpty) {
       controller = CameraController(
@@ -106,6 +111,7 @@ class CameraAppState extends State<CameraApp> {
     super.dispose();
   }
 
+  // 사진 촬영 및 업로드 기능
   Future _takePicture() async {
     if (!controller.value.isInitialized) {
       print('Camera is not initialized.');
@@ -172,6 +178,7 @@ class CameraAppState extends State<CameraApp> {
     }
   }
 
+  // 이미지 업로드 
   Future<bool> _uploadImage(String imagePath) async {
     try {
       final url = Uri.parse('https://corkage.store/api/v1/detect');
@@ -319,6 +326,7 @@ class CameraAppState extends State<CameraApp> {
   }
 }
 
+// 카메라 뷰파인더 모서리를 표시하는 CustomPainter
 class FramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
