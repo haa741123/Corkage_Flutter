@@ -61,6 +61,7 @@ class CameraAppState extends State<CameraApp> {
   String errorMessage = '';
   XFile? imageFile;
   String androidId = 'unknown';
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -106,47 +107,29 @@ class CameraAppState extends State<CameraApp> {
     super.dispose();
   }
 
-  Future _takePicture() async {
+  Future<void> _takePicture() async {
     if (!controller.value.isInitialized) {
       print('Camera is not initialized.');
       return;
     }
 
-    try {
-      // 로딩 다이얼로그 표시
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return Dialog(
-            backgroundColor: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text('이미지 업로드 중...'),
-                ],
-              ),
-            ),
-          );
-        },
-      );
+    setState(() {
+      _isLoading = true;
+    });
 
+    try {
       final image = await controller.takePicture();
       setState(() {
         imageFile = image;
       });
-
       bool uploadSuccess = await _uploadImage(image.path);
 
       if (mounted) {
-        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+        setState(() {
+          _isLoading = false;
+        });
 
         if (uploadSuccess) {
-          // 웹뷰 표시
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -160,13 +143,15 @@ class CameraAppState extends State<CameraApp> {
             ),
           );
         } else {
-          // _showErrorMessage('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+          _showErrorMessage('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
         }
       }
     } catch (e) {
       print('Error taking picture: $e');
       if (mounted) {
-        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+        setState(() {
+          _isLoading = false;
+        });
         _showErrorMessage('사진 촬영에 실패했습니다: $e');
       }
     }
@@ -230,6 +215,7 @@ class CameraAppState extends State<CameraApp> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white, // 여기에 하얀색 배경 추가
       appBar: AppBar(
         automaticallyImplyLeading: false,
       ),
@@ -249,20 +235,20 @@ class CameraAppState extends State<CameraApp> {
             },
           ),
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.4,
-            left: MediaQuery.of(context).size.width * 0.1,
-            right: MediaQuery.of(context).size.width * 0.1,
+            top: MediaQuery.of(context).size.height * 0.48,
+            left: MediaQuery.of(context).size.width * 0.2,
+            right: MediaQuery.of(context).size.width * 0.2,
             child: Container(
-              padding: EdgeInsets.all(10),
+              padding: EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(10),
+                color: Colors.white.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(15),
               ),
               child: Text(
                 '와인 제품 전체가 다 보이도록\n정면으로 찍어주세요',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -284,6 +270,24 @@ class CameraAppState extends State<CameraApp> {
               ),
             ),
           ),
+          if (_isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.7),
+                child: Center(
+                  child: FractionallySizedBox(
+                    widthFactor: 1, // Container 너비의 100%
+                    heightFactor: 1, // Container 높이의 100%
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Image.asset(
+                        'assets/Loading.png',
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
@@ -307,7 +311,6 @@ class CameraAppState extends State<CameraApp> {
                 ),
               );
               break;
-
             case 3:
               Navigator.pushReplacementNamed(context, Routes.myPage,
                   arguments: widget.cameras);
@@ -326,10 +329,12 @@ class FramePainter extends CustomPainter {
       ..color = Colors.white
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
+
     double frameSize = size.width * 0.8;
     double left = (size.width - frameSize) / 2;
     double top = (size.height - frameSize) / 2;
     double cornerLength = 30.0;
+
     // 프레임 모서리 그리기
     canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), paint);
