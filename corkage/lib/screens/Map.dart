@@ -116,23 +116,18 @@ class _MapPageState extends State<MapPage> {
   }
 
   void _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      print('Location services are disabled.');
-      return;
-    }
-
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print('Location permissions are denied.');
+        print('Location permissions are denied');
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       print('Location permissions are permanently denied.');
+      // 사용자에게 설정에서 권한을 변경하도록 안내하는 메시지 표시
       return;
     }
 
@@ -141,14 +136,25 @@ class _MapPageState extends State<MapPage> {
           desiredAccuracy: LocationAccuracy.high);
       setState(() => _currentPosition = position);
       print('Current position: ${position.latitude}, ${position.longitude}');
+      _sendLocationToWebView(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location: $e');
+      // 오류 발생 시 기본 위치 사용 또는 사용자에게 알림
     }
   }
 
   void _sendLocationToWebView(double latitude, double longitude) {
-    String jsCode = "window.handleFlutterLocation($latitude, $longitude);";
-    _controller.runJavascript(jsCode);
+    if (_controller != null) {
+      String jsCode =
+          "if(typeof handleFlutterLocation === 'function') { handleFlutterLocation($latitude, $longitude); } else { console.error('handleFlutterLocation is not defined'); }";
+      _controller.runJavascript(jsCode).then((_) {
+        print('Location sent to WebView');
+      }).catchError((error) {
+        print('Error sending location to WebView: $error');
+      });
+    } else {
+      print('WebView controller is not initialized');
+    }
   }
 
   @override
