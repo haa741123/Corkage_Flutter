@@ -3,14 +3,14 @@ import 'package:camera/camera.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:device_info_plus/device_info_plus.dart';
-import '/widgets/BottomNavigationBar.dart';
-import '/routes.dart';
-import 'Camera_Result.dart';
-import 'MyPage.dart';
-import 'Index.dart';
-import 'Map.dart';
+import '/widgets/BottomNavigationBar.dart'; // Ensure this path is correct
+import '/routes.dart'; // Ensure this path is correct
 import 'dart:convert';
 import 'package:webview_flutter/webview_flutter.dart';
+import '/screens/Index.dart';
+import '/screens/MyPage.dart';
+import '/screens/Camera.dart';
+import '/screens/Map.dart';
 
 List<CameraDescription>? cameras;
 
@@ -38,7 +38,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// 카메라 오류 시 표시할 페이지
 class ErrorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -49,7 +48,6 @@ class ErrorPage extends StatelessWidget {
   }
 }
 
-// 카메라 기능을 제공하는 StatefulWidget
 class CameraApp extends StatefulWidget {
   final List<CameraDescription> cameras;
   const CameraApp({Key? key, required this.cameras}) : super(key: key);
@@ -58,13 +56,14 @@ class CameraApp extends StatefulWidget {
   State<CameraApp> createState() => CameraAppState();
 }
 
-// 카메라 초기화 및 사진 촬영 기능을 담당
 class CameraAppState extends State<CameraApp> {
   late CameraController controller;
   String errorMessage = '';
   XFile? imageFile;
   String androidId = 'unknown';
   bool _isLoading = false;
+  Map<String, dynamic>? jsonData;
+  late WebViewController webViewController;
 
   @override
   void initState() {
@@ -73,7 +72,6 @@ class CameraAppState extends State<CameraApp> {
     _getAndroidId();
   }
 
-  // 안드로이드 디바이스 ID를 가져오는 함수
   Future<void> _getAndroidId() async {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -82,7 +80,6 @@ class CameraAppState extends State<CameraApp> {
     });
   }
 
-  // 카메라 초기화
   Future<void> _initializeCamera() async {
     if (widget.cameras.isNotEmpty) {
       controller = CameraController(
@@ -112,7 +109,6 @@ class CameraAppState extends State<CameraApp> {
     super.dispose();
   }
 
-  // 사진 촬영 및 업로드 기능
   Future _takePicture() async {
     if (!controller.value.isInitialized) {
       print('Camera is not initialized.');
@@ -144,6 +140,32 @@ class CameraAppState extends State<CameraApp> {
                 body: WebView(
                   initialUrl: 'https://corkage.store/drink_info',
                   javascriptMode: JavascriptMode.unrestricted,
+                  onWebViewCreated: (controller) {
+                    // Assign WebViewController
+                    webViewController = controller;
+                  },
+                  onPageFinished: (String url) {
+                    // Use WebViewController to run JavaScript
+                    if (jsonData != null) {
+                      webViewController.runJavascript('''
+                        const response = ${json.encode(jsonData)};
+                        const wineName = response.ocr_result.wine_info.ProductName;
+                        const wineNameElement = document.getElementById('wineName');
+                        const wineDescription = response.ocr_result.wine_info.ProductDescription;
+                        const wineDescriptionElement = document.getElementById('wineDescription');
+                        const winePrice = response.ocr_result.wine_info.Priceinformation;
+                        const winePriceElement = document.getElementById('winePrice');
+                        const wineAlcohol = response.ocr_result.wine_info.Alcohol;
+                        const wineAlcoholElement = document.getElementById('wineAlcohol');
+                        if (wineNameElement) {
+                          wineNameElement.innerHTML = wineName;
+                          wineDescriptionElement.innerHTML = wineDescription;
+                          winePriceElement.innerHTML = winePrice;
+                          wineAlcoholElement.innerHTML = wineAlcohol;
+                        }
+                      ''');
+                    }
+                  },
                 ),
               ),
             ),
@@ -163,7 +185,6 @@ class CameraAppState extends State<CameraApp> {
     }
   }
 
-  // 이미지 업로드
   Future<bool> _uploadImage(String imagePath) async {
     try {
       final url = Uri.parse('https://corkage.store/api/v1/detect');
@@ -177,6 +198,7 @@ class CameraAppState extends State<CameraApp> {
       print('서버 응답 내용: $responseBody');
       if (response.statusCode == 200) {
         print('이미지 업로드 성공');
+        jsonData = json.decode(responseBody);
         return true;
       } else {
         print('이미지 업로드 실패: 상태 코드 ${response.statusCode}');
@@ -222,7 +244,7 @@ class CameraAppState extends State<CameraApp> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white, // 여기에 하얀색 배경 추가
+      backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
       ),
@@ -234,10 +256,8 @@ class CameraAppState extends State<CameraApp> {
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTapDown: (details) => _onViewFinderTap(details, constraints),
-                child: CustomPaint(
-                  size: Size.infinite,
-                  painter: FramePainter(),
-                ),
+                child:
+                    CustomPaint(size: Size.infinite, painter: FramePainter()),
               );
             },
           ),
@@ -246,54 +266,40 @@ class CameraAppState extends State<CameraApp> {
             left: MediaQuery.of(context).size.width * 0.2,
             right: MediaQuery.of(context).size.width * 0.2,
             child: Container(
-              padding: EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Text(
-                '와인 제품 전체가 다 보이도록\n정면으로 찍어주세요',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+                padding: EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(15)),
+                child: Text('와인 제품 전체가 다 보이도록\n정면으로 찍어주세요',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold))),
           ),
           Positioned(
             bottom: 60,
             left: 0,
             right: 0,
             child: Center(
-              child: FloatingActionButton(
-                onPressed: _takePicture,
-                backgroundColor: Colors.red,
-                child: Icon(Icons.camera_alt, color: Colors.white),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-              ),
-            ),
+                child: FloatingActionButton(
+                    onPressed: _takePicture,
+                    backgroundColor: Colors.red,
+                    child: Icon(Icons.camera_alt, color: Colors.white),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30.0)))),
           ),
           if (_isLoading)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.7),
-                child: Center(
-                  child: FractionallySizedBox(
-                    widthFactor: 1, // Container 너비의 100%
-                    heightFactor: 1, // Container 높이의 100%
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: Image.asset(
-                        'assets/Loading.png',
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+                  color: Colors.black.withOpacity(0.7),
+                  child: Center(
+                      child: FractionallySizedBox(
+                          widthFactor: 1,
+                          heightFactor: 1,
+                          child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: Image.asset('assets/Loading.png'))))),
             ),
         ],
       ),
@@ -329,7 +335,6 @@ class CameraAppState extends State<CameraApp> {
   }
 }
 
-// 카메라 뷰파인더 모서리를 표시하는 CustomPainter
 class FramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -343,7 +348,7 @@ class FramePainter extends CustomPainter {
     double top = (size.height - frameSize) / 2;
     double cornerLength = 30.0;
 
-    // 프레임 모서리 그리기
+    // Draw frame corners
     canvas.drawLine(Offset(left, top), Offset(left + cornerLength, top), paint);
     canvas.drawLine(Offset(left, top), Offset(left, top + cornerLength), paint);
     canvas.drawLine(Offset(left + frameSize, top),
