@@ -9,6 +9,7 @@ import '/screens/SettingsPage.dart';
 import '/screens/NoticePage.dart';
 import '/screens/Login.dart';
 import 'package:camera/camera.dart';
+import 'package:webview_flutter/webview_flutter.dart'; // Ensure this import is present
 
 List<CameraDescription>? cameras;
 
@@ -66,17 +67,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _startSplashScreenTimer() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isFirstRun = prefs.getBool('isFirstRun') ?? true;
     Future.delayed(Duration(seconds: 3), () {
-      if (isFirstRun) {
-        prefs.setBool('isFirstRun', false);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => OnboardingPage()),
-        );
-      } else {
-        Navigator.pushReplacementNamed(context, Routes.home);
-      }
+      // Always navigate to home after splash screen
+      Navigator.pushReplacementNamed(context, Routes.login);
     });
   }
 
@@ -89,92 +82,6 @@ class _SplashScreenState extends State<SplashScreen> {
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
-        ),
-      ),
-    );
-  }
-}
-
-class OnboardingPage extends StatefulWidget {
-  @override
-  _OnboardingPageState createState() => _OnboardingPageState();
-}
-
-class _OnboardingPageState extends State<OnboardingPage> {
-  final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          PageView(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            children: [
-              _buildPage(imagePath: 'assets/onboarding1.png'),
-              _buildPage(imagePath: 'assets/onboarding2.png'),
-            ],
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              width: double.infinity,
-              color: Colors.black.withOpacity(0.8),
-              padding: EdgeInsets.symmetric(vertical: 16.0),
-              child: _currentPage == 1
-                  ? TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, Routes.home);
-                      },
-                      child: Text(
-                        '카카오톡으로 3초 회원가입',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15.0,
-                        ),
-                      ),
-                    )
-                  : TextButton(
-                      onPressed: () {
-                        _pageController.nextPage(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      child: Text(
-                        '다음',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15.0,
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPage({required String imagePath}) {
-    return Container(
-      color: Colors.white,
-      child: Center(
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.9,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(imagePath),
-              fit: BoxFit.contain,
-            ),
-          ),
         ),
       ),
     );
