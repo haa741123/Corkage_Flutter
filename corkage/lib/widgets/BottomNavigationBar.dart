@@ -111,7 +111,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget _getPage(String routeName) {
     switch (routeName) {
       case Routes.home:
-        return IndexPage(cameras: cameras);
+        return IndexPage(cameras: cameras, token: '', userId: '');
       case Routes.map:
         return MapPage(cameras: cameras);
       case Routes.camera:

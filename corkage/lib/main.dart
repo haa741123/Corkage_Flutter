@@ -4,11 +4,11 @@ import 'screens/Map.dart';
 import '/routes.dart';
 import '/screens/Camera.dart';
 import '/screens/MyPage.dart';
-import '/screens/Index.dart';
 import '/screens/SettingsPage.dart';
 import '/screens/NoticePage.dart';
-import '/screens/Login.dart';
 import 'package:camera/camera.dart';
+import '/screens/Index.dart' as index;
+import '/screens/Login.dart' as login;
 import 'package:webview_flutter/webview_flutter.dart'; // Ensure this import is present
 
 List<CameraDescription>? cameras;
@@ -28,15 +28,17 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => SplashScreen(),
-        '/index': (context) => IndexPage(cameras: cameras),
-        Routes.home: (context) => IndexPage(cameras: cameras),
+        '/index': (context) =>
+            index.IndexPage(cameras: cameras, token: '', userId: ''),
+        Routes.home: (context) =>
+            index.IndexPage(cameras: cameras, token: '', userId: ''),
         Routes.camera: (context) =>
             cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
         Routes.myPage: (context) => MyPage(cameras: cameras),
         Routes.map: (context) => MapPage(cameras: cameras),
         Routes.settings: (context) => SettingsPage(),
         Routes.notice: (context) => NoticePage(),
-        Routes.login: (context) => Login(),
+        Routes.login: (context) => login.Login(cameras: cameras),
       },
     );
   }
