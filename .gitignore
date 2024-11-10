@@ -12,3 +12,8 @@ corkage/macos/Flutter/GeneratedPluginRegistrant.swift
 corkage/windows/flutter/generated_plugin_registrant.cc
 corkage/windows/flutter/generated_plugin_registrant.h
 corkage/windows/flutter/generated_plugins.cmake
+corkage/linux/flutter/generated_plugin_registrant.cc
+corkage/linux/flutter/generated_plugins.cmake
+corkage/macos/Flutter/GeneratedPluginRegistrant.swift
+corkage/windows/flutter/generated_plugin_registrant.cc
+corkage/windows/flutter/generated_plugins.cmake

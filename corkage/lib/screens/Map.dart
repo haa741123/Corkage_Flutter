@@ -31,7 +31,8 @@ class MyApp extends StatelessWidget {
       ),
       home: MapPage(cameras: cameras),
       routes: {
-        Routes.home: (context) => IndexPage(cameras: cameras),
+        Routes.home: (context) =>
+            IndexPage(cameras: cameras),
         Routes.myPage: (context) => MyPage(cameras: cameras),
         Routes.map: (context) => MapPage(cameras: cameras),
         Routes.settings: (context) => SettingsPage(),
