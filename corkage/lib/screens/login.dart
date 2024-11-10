@@ -18,6 +18,25 @@ const String REDIRECT_URI = 'https://corkage.store/auth/kakao/callback';
 
 class _LoginState extends State<Login> {
   late WebViewController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _checkStoredUserInfo();
+  }
+
+  Future<void> _checkStoredUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+    final userId = prefs.getString('user_id');
+    final nickname = prefs.getString('nickname');
+
+    if (token != null && userId != null && nickname != null) {
+      // User information exists, navigate to index page
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacementNamed('/index');
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
