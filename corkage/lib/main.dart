@@ -28,10 +28,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => SplashScreen(),
-        '/index': (context) =>
-            index.IndexPage(cameras: cameras),
-        Routes.home: (context) =>
-            index.IndexPage(cameras: cameras),
+        '/index': (context) => index.IndexPage(cameras: cameras),
+        Routes.home: (context) => index.IndexPage(cameras: cameras),
         Routes.camera: (context) =>
             cameras != null ? CameraApp(cameras: cameras!) : ErrorPage(),
         Routes.myPage: (context) => MyPage(cameras: cameras),
