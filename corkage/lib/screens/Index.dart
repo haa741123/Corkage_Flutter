@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 
 class IndexPage extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -23,6 +24,7 @@ class _IndexPageState extends State<IndexPage> {
   @override
   void initState() {
     super.initState();
+    _getCurrentLocation();
     WebView.platform = SurfaceAndroidWebView();
     _loadNickname();
   }
@@ -36,6 +38,48 @@ class _IndexPageState extends State<IndexPage> {
       nickname = loadedNickname;
     });
     print('Nickname set in state: $nickname');
+  }
+
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('Location permissions are denied');
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permissions are permanently denied');
+      return;
+    }
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      print('Current location: ${position.latitude}, ${position.longitude}');
+      _updateLocationInWebView(position.latitude, position.longitude);
+    } catch (e) {
+      print('Error getting location: $e');
+    }
+  }
+
+  void _updateLocationInWebView(double latitude, double longitude) {
+    if (_controller != null) {
+      _controller
+          .evaluateJavascript('''
+      if (typeof handleFlutterLocation === 'function') {
+        handleFlutterLocation($latitude, $longitude);
+      } else {
+        console.log('handleFlutterLocation function not found');
+      }
+    ''')
+          .then((result) => print('Location update result: $result'))
+          .catchError((error) => print('Error updating location: $error'));
+    } else {
+      print('WebView controller is not initialized');
+    }
   }
 
   void _updateNickname() {
