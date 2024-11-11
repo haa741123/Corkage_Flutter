@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _startSplashScreenTimer() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(Duration(seconds: 1), () {
       // Always navigate to home after splash screen
       Navigator.pushReplacementNamed(context, Routes.login);
     });

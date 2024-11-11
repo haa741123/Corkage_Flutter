@@ -19,7 +19,9 @@ class IndexPage extends StatefulWidget {
 
 class _IndexPageState extends State<IndexPage> {
   late WebViewController _controller;
+  final CookieManager _cookieManager = CookieManager();
   String? nickname;
+  String? userId;
 
   @override
   void initState() {
@@ -33,11 +35,14 @@ class _IndexPageState extends State<IndexPage> {
     print('Starting to load nickname');
     final prefs = await SharedPreferences.getInstance();
     final loadedNickname = prefs.getString('nickname');
-    print('Loaded nickname: $loadedNickname');
+    final loadedUserId = prefs.getString('user_id');
+    print('Loaded nickname: $loadedNickname, user_id: $loadedUserId');
     setState(() {
       nickname = loadedNickname;
+      userId = loadedUserId;
     });
     print('Nickname set in state: $nickname');
+    print('UserId set in state: $userId');
   }
 
   Future<void> _getCurrentLocation() async {
@@ -102,6 +107,26 @@ class _IndexPageState extends State<IndexPage> {
     }
   }
 
+  Future<void> _setUserCookies() async {
+    if (userId != null && userId!.isNotEmpty) {
+      try {
+        await _cookieManager.setCookie(
+          WebViewCookie(
+            name: 'user_id',
+            value: userId!,
+            domain: 'corkage.store',
+            path: '/',
+          ),
+        );
+        print('User cookie set successfully - user_id: $userId');
+      } catch (e) {
+        print('Error setting user cookie: $e');
+      }
+    } else {
+      print('UserId is null or empty, not setting cookie');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,8 +137,9 @@ class _IndexPageState extends State<IndexPage> {
           child: WebView(
             initialUrl: 'https://corkage.store/main',
             javascriptMode: JavascriptMode.unrestricted,
-            onWebViewCreated: (WebViewController webViewController) {
+            onWebViewCreated: (WebViewController webViewController) async {
               _controller = webViewController;
+              await _setUserCookies();
               print('WebView controller created');
             },
             onPageStarted: (String url) {
