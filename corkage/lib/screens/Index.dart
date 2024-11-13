@@ -149,6 +149,7 @@ class _IndexPageState extends State<IndexPage> {
               print('Page finished loading: $url');
               print('Current nickname: $nickname');
               _updateNickname();
+              _getCurrentLocation();
             },
             gestureNavigationEnabled: true,
             backgroundColor: Colors.white,

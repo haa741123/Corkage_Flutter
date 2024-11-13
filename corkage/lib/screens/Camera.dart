@@ -273,9 +273,11 @@ class CameraAppState extends State<CameraApp> {
                 child: Text('와인 제품 전체가 다 보이도록\n정면으로 찍어주세요',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold))),
+                      fontFamily: 'Pretendard',
+                      fontWeight: FontWeight.w800, // ExtraBold
+                      color: Colors.white,
+                      fontSize: 16,
+                    ))),
           ),
           Positioned(
             bottom: 60,

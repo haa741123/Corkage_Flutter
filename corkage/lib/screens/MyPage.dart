@@ -17,6 +17,7 @@ class MyPage extends StatefulWidget {
 class _MyPageState extends State<MyPage> {
   late WebViewController _controller;
   String? _username;
+  String _currentUrl = 'https://corkage.store/mypage';
 
   @override
   void initState() {
@@ -29,7 +30,6 @@ class _MyPageState extends State<MyPage> {
     setState(() {
       _username = prefs.getString('nickname') ??
           '사용자'; // Changed 'username' to 'nickname'
-         
     });
   }
 
@@ -67,21 +67,26 @@ class _MyPageState extends State<MyPage> {
                   onWebViewCreated: (WebViewController webViewController) {
                     _controller = webViewController;
                   },
-                  onPageFinished: (_) {
+                  onPageFinished: (String url) {
+                    setState(() {
+                      _currentUrl = url;
+                    });
                     _injectUsername();
                   },
                   gestureNavigationEnabled: true,
                 ),
-                Positioned(
-                  top: 30.0,
-                  right: 16.0,
-                  child: IconButton(
-                    icon: Icon(Icons.settings, color: Colors.black, size: 30.0),
-                    onPressed: () {
-                      Navigator.pushNamed(context, Routes.settings);
-                    },
+                if (_currentUrl == 'https://corkage.store/mypage')
+                  Positioned(
+                    top: 7.0,
+                    right: 16.0,
+                    child: IconButton(
+                      icon:
+                          Icon(Icons.settings, color: Colors.black, size: 25.0),
+                      onPressed: () {
+                        Navigator.pushNamed(context, Routes.settings);
+                      },
+                    ),
                   ),
-                ),
               ],
             ),
           ),
