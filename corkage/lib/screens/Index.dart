@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart'; // URL 런처 패키지 추가
 
 class IndexPage extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -31,6 +32,7 @@ class _IndexPageState extends State<IndexPage> {
     _loadNickname();
   }
 
+  // 닉네임과 사용자 ID 로드
   Future<void> _loadNickname() async {
     print('Starting to load nickname');
     final prefs = await SharedPreferences.getInstance();
@@ -45,6 +47,7 @@ class _IndexPageState extends State<IndexPage> {
     print('UserId set in state: $userId');
   }
 
+  // 현재 위치 가져오기
   Future<void> _getCurrentLocation() async {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -70,6 +73,7 @@ class _IndexPageState extends State<IndexPage> {
     }
   }
 
+  // WebView에 위치 정보 업데이트
   void _updateLocationInWebView(double latitude, double longitude) {
     if (_controller != null) {
       _controller
@@ -87,6 +91,7 @@ class _IndexPageState extends State<IndexPage> {
     }
   }
 
+  // WebView에 닉네임 업데이트
   void _updateNickname() {
     print('Updating nickname in WebView');
     if (nickname != null) {
@@ -107,6 +112,7 @@ class _IndexPageState extends State<IndexPage> {
     }
   }
 
+  // 사용자 쿠키 설정
   Future<void> _setUserCookies() async {
     if (userId != null && userId!.isNotEmpty) {
       try {
@@ -124,6 +130,60 @@ class _IndexPageState extends State<IndexPage> {
       }
     } else {
       print('UserId is null or empty, not setting cookie');
+    }
+  }
+
+  // URL 처리 메서드
+  Future<void> _launchURL(String url) async {
+    if (url.startsWith('tel:')) {
+      await _makePhoneCall(url.substring(4)); // 'tel:' 제거
+    } else if (url.startsWith('kakaomap://')) {
+      await _openKakaoMap(url);
+    } else {
+      await _launchGenericUrl(url);
+    }
+  }
+
+  // 전화 걸기 메서드
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber.replaceAll('-', ''),
+    );
+    try {
+      if (!await launchUrl(launchUri)) {
+        throw 'Could not launch $launchUri';
+      }
+    } catch (e) {
+      print('Error launching phone call: $e');
+    }
+  }
+
+  // 카카오맵 열기 메서드
+  Future<void> _openKakaoMap(String url) async {
+    try {
+      if (!await launchUrl(Uri.parse(url))) {
+        // 카카오맵 앱이 설치되어 있지 않은 경우, 웹 버전 카카오맵으로 리다이렉트
+        final webUrl = 'https://map.kakao.com/';
+        if (!await launchUrl(Uri.parse(webUrl),
+            mode: LaunchMode.externalApplication)) {
+          throw 'Could not launch $webUrl';
+        }
+      }
+    } catch (e) {
+      print('Error launching KakaoMap: $e');
+    }
+  }
+
+  // 일반 URL 열기 메서드
+  Future<void> _launchGenericUrl(String url) async {
+    try {
+      if (!await launchUrl(Uri.parse(url),
+          mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      print('Error launching URL: $e');
     }
   }
 
@@ -150,6 +210,15 @@ class _IndexPageState extends State<IndexPage> {
               print('Current nickname: $nickname');
               _updateNickname();
               _getCurrentLocation();
+            },
+            navigationDelegate: (NavigationRequest request) {
+              if (request.url.startsWith('tel:') ||
+                  request.url.startsWith('kakaomap://') ||
+                  request.url.startsWith('intent:')) {
+                _launchURL(request.url);
+                return NavigationDecision.prevent;
+              }
+              return NavigationDecision.navigate;
             },
             gestureNavigationEnabled: true,
             backgroundColor: Colors.white,

@@ -24,7 +24,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter WebView Example',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        fontFamily: 'Pretendard',
+      ),
       initialRoute: '/',
       routes: {
         '/': (context) => SplashScreen(),

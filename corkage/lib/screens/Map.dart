@@ -12,6 +12,7 @@ import 'Camera.dart';
 import 'package:camera/camera.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart'; // URL 런처 패키지 추가
 
 List<CameraDescription>? cameras;
 
@@ -31,8 +32,7 @@ class MyApp extends StatelessWidget {
       ),
       home: MapPage(cameras: cameras),
       routes: {
-        Routes.home: (context) =>
-            IndexPage(cameras: cameras),
+        Routes.home: (context) => IndexPage(cameras: cameras),
         Routes.myPage: (context) => MyPage(cameras: cameras),
         Routes.map: (context) => MapPage(cameras: cameras),
         Routes.settings: (context) => SettingsPage(),
@@ -78,21 +78,20 @@ class _MapPageState extends State<MapPage> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        // dialogContext 사용
         return AlertDialog(
           title: Text('광고 수신 동의'),
           content: Text('광고 수신을 허용하시겠습니까?'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // dialogContext 사용
+                Navigator.of(dialogContext).pop();
                 _setAdsConsent(false);
               },
               child: Text('거부'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // dialogContext 사용
+                Navigator.of(dialogContext).pop();
                 _setAdsConsent(true);
               },
               child: Text('허용'),
@@ -111,7 +110,6 @@ class _MapPageState extends State<MapPage> {
         ? '광고 수신을 허용했습니다: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}'
         : '광고 수신을 거부했습니다.';
 
-    // SnackBar 표시
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
   }
@@ -128,7 +126,6 @@ class _MapPageState extends State<MapPage> {
 
     if (permission == LocationPermission.deniedForever) {
       print('Location permissions are permanently denied.');
-      // 사용자에게 설정에서 권한을 변경하도록 안내하는 메시지 표시
       return;
     }
 
@@ -140,7 +137,6 @@ class _MapPageState extends State<MapPage> {
       _sendLocationToWebView(position.latitude, position.longitude);
     } catch (e) {
       print('Error getting location: $e');
-      // 오류 발생 시 기본 위치 사용 또는 사용자에게 알림
     }
   }
 
@@ -155,6 +151,56 @@ class _MapPageState extends State<MapPage> {
       });
     } else {
       print('WebView controller is not initialized');
+    }
+  }
+
+  Future<void> _launchURL(String url) async {
+    if (url.startsWith('tel:')) {
+      await _makePhoneCall(url.substring(4)); // 'tel:' 제거
+    } else if (url.startsWith('kakaomap://')) {
+      await _openKakaoMap(url);
+    } else {
+      await _launchGenericUrl(url);
+    }
+  }
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber.replaceAll('-', ''),
+    );
+    try {
+      if (!await launchUrl(launchUri)) {
+        throw 'Could not launch $launchUri';
+      }
+    } catch (e) {
+      print('Error launching phone call: $e');
+    }
+  }
+
+  Future<void> _openKakaoMap(String url) async {
+    try {
+      if (!await launchUrl(Uri.parse(url))) {
+        // 카카오맵 앱이 설치되어 있지 않은 경우, 웹 버전 카카오맵으로 리다이렉트
+        final webUrl = 'https://map.kakao.com/';
+        if (!await launchUrl(Uri.parse(webUrl),
+            mode: LaunchMode.externalApplication)) {
+          throw 'Could not launch $webUrl';
+        }
+      }
+    } catch (e) {
+      print('Error launching KakaoMap: $e');
+    }
+  }
+
+  Future<void> _launchGenericUrl(String url) async {
+    try {
+      if (!await launchUrl(Uri.parse(url),
+          mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      print('Error launching URL: $e');
     }
   }
 
@@ -177,6 +223,15 @@ class _MapPageState extends State<MapPage> {
                 _currentPosition!.latitude, _currentPosition!.longitude);
           }
         },
+        navigationDelegate: (NavigationRequest request) {
+          if (request.url.startsWith('intent:') ||
+              request.url.startsWith('kakaomap://') ||
+              request.url.startsWith('tel:')) {
+            _launchURL(request.url);
+            return NavigationDecision.prevent;
+          }
+          return NavigationDecision.navigate;
+        },
         gestureNavigationEnabled: true,
       ),
       bottomNavigationBar: CustomBottomNavigationBar(
@@ -187,11 +242,9 @@ class _MapPageState extends State<MapPage> {
             case 0:
               Navigator.pushNamed(context, Routes.home);
               break;
-
             case 1:
               Navigator.pushNamed(context, Routes.map);
               break;
-
             case 2:
               if (widget.cameras != null && widget.cameras!.isNotEmpty) {
                 Navigator.push(
@@ -202,7 +255,6 @@ class _MapPageState extends State<MapPage> {
                 );
               }
               break;
-
             case 3:
               Navigator.pushNamed(context, Routes.myPage);
               break;
