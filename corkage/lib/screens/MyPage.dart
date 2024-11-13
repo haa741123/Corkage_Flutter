@@ -29,6 +29,7 @@ class _MyPageState extends State<MyPage> {
     setState(() {
       _username = prefs.getString('nickname') ??
           '사용자'; // Changed 'username' to 'nickname'
+         
     });
   }
 
@@ -38,7 +39,13 @@ class _MyPageState extends State<MyPage> {
         (function() {
           const userInfoSection = document.querySelector('section.user-info h2');
           if (userInfoSection) {
+            // Update the username text
             userInfoSection.innerText = '$_username님';
+            
+            // Add a click event listener to the username section
+            userInfoSection.addEventListener('click', function() {
+               location.href='/ch_name/$_username님'
+            });
           }
         })();
       ''');
