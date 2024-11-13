@@ -39,10 +39,10 @@ class _MyPageState extends State<MyPage> {
         (function() {
           const userInfoSection = document.querySelector('section.user-info h2');
           if (userInfoSection) {
-            // Update the username text
-            userInfoSection.innerText = '$_username님';
+            // SharedPreferences에서 닉네임 가져오기
+            userInfoSection.innerText = '$_username님  >';
             
-            // Add a click event listener to the username section
+            // 클릭 이벤트 (닉네임 변경 페이지로 이동)
             userInfoSection.addEventListener('click', function() {
                location.href='/ch_name/$_username님'
             });
