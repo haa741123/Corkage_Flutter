@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:camera/camera.dart';
@@ -28,8 +29,7 @@ class _MyPageState extends State<MyPage> {
   Future<void> _loadUsername() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _username = prefs.getString('nickname') ??
-          '사용자'; // Changed 'username' to 'nickname'
+      _username = prefs.getString('nickname') ?? '사용자';
     });
   }
 
@@ -39,10 +39,7 @@ class _MyPageState extends State<MyPage> {
         (function() {
           const userInfoSection = document.querySelector('section.user-info h2');
           if (userInfoSection) {
-            // SharedPreferences에서 닉네임 가져오기
             userInfoSection.innerText = '$_username님  >';
-            
-            // 클릭 이벤트 (닉네임 변경 페이지로 이동)
             userInfoSection.addEventListener('click', function() {
                location.href='/ch_name/$_username님'
             });
@@ -50,6 +47,49 @@ class _MyPageState extends State<MyPage> {
         })();
       ''');
     }
+  }
+
+  void _injectMessageListener() {
+    _controller.evaluateJavascript('''
+      (function() {
+        if (window.messageListenerInjected) return;
+        window.messageListenerInjected = true;
+        
+        console.log("Injecting message listener");
+
+        const originalConsoleLog = console.log;
+        console.log = function() {
+          originalConsoleLog.apply(console, arguments);
+          const message = Array.from(arguments).join(' ');
+          if (message.includes('"status":"success"')) {
+            try {
+              const data = JSON.parse(message);
+              if (data.status === "success" && data.nickname) {
+                window.FlutterWebView.postMessage(JSON.stringify({
+                  type: 'updateNickname',
+                  nickname: data.nickname
+                }));
+              }
+            } catch (e) {
+              console.error("Error parsing JSON:", e);
+            }
+          }
+        };
+      })();
+    ''');
+  }
+
+  Future<void> _updateNickname(String newNickname) async {
+    print("Updating nickname to: $newNickname");
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('nickname', newNickname);
+    setState(() {
+      _username = newNickname;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('닉네임이 성공적으로 변경되었습니다: $newNickname')),
+    );
+    await _controller.loadUrl('https://corkage.store/mypage');
   }
 
   @override
@@ -72,6 +112,25 @@ class _MyPageState extends State<MyPage> {
                       _currentUrl = url;
                     });
                     _injectUsername();
+                    if (url.contains('corkage.store/ch_name')) {
+                      _injectMessageListener();
+                    }
+                  },
+                  javascriptChannels: {
+                    JavascriptChannel(
+                      name: 'FlutterWebView',
+                      onMessageReceived: (JavascriptMessage message) {
+                        print("Received message from JS: ${message.message}");
+                        try {
+                          final data = jsonDecode(message.message);
+                          if (data['type'] == 'updateNickname') {
+                            _updateNickname(data['nickname']);
+                          }
+                        } catch (e) {
+                          print("Error processing message: $e");
+                        }
+                      },
+                    ),
                   },
                   gestureNavigationEnabled: true,
                 ),
