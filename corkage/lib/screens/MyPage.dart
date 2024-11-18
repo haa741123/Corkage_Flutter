@@ -79,6 +79,26 @@ class _MyPageState extends State<MyPage> {
     ''');
   }
 
+  void _injectBookmarkTitle() async {
+    final prefs = await SharedPreferences.getInstance();
+    final nickname = prefs.getString('nickname') ?? '사용자';
+    _controller.evaluateJavascript('''
+    (function() {
+      const collectionTitle = document.getElementById('collection-title');
+      if (collectionTitle) {
+        // 기존 count span 요소를 저장
+        const countSpan = collectionTitle.querySelector('span.count');
+        // 새로운 텍스트 내용 설정
+        collectionTitle.textContent = '$nickname님의 컬렉션';
+        // count span 요소가 있었다면 다시 추가
+        if (countSpan) {
+          collectionTitle.appendChild(countSpan);
+        }
+      }
+    })();
+  ''');
+  }
+
   Future<void> _updateNickname(String newNickname) async {
     print("Updating nickname to: $newNickname");
     final prefs = await SharedPreferences.getInstance();
@@ -114,6 +134,9 @@ class _MyPageState extends State<MyPage> {
                     _injectUsername();
                     if (url.contains('corkage.store/ch_name')) {
                       _injectMessageListener();
+                    }
+                    if (url == 'https://corkage.store/bookmark') {
+                      _injectBookmarkTitle();
                     }
                   },
                   javascriptChannels: {
