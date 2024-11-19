@@ -44,7 +44,7 @@ dependencies:
   googleapis_auth: ^1.1.0
   device_info_plus: ^9.0.3
   shared_preferences: ^2.1.1
-  flutter_svg: ^1.0.0
+  flutter_svg: ^2.0.0
   flutter_secure_storage: ^5.0.2
   url_launcher: ^6.0.0
   # The following adds the Cupertino Icons font to your application.
@@ -84,6 +84,7 @@ flutter:
     # 또는 폴더 전체를 등록하려면
     - assets/
     - assets/icons/Home.svg
+    - assets/icons/gear.svg
     - assets/icons/Location.svg
     - assets/icons/Scan.svg
     - assets/icons/Profile.svg
@@ -112,6 +113,5 @@ fonts:
         weight: 700
       - asset: assets/font/Pretendard-ExtraBold.otf
         weight: 800
-  
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

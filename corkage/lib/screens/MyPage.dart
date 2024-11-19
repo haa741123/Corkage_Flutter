@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/routes.dart';
 import '/widgets/BottomNavigationBar.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MyPage extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -159,11 +160,15 @@ class _MyPageState extends State<MyPage> {
                 ),
                 if (_currentUrl == 'https://corkage.store/mypage')
                   Positioned(
-                    top: 7.0,
-                    right: 16.0,
+                    top: 3.0,
+                    right: 5.0,
                     child: IconButton(
-                      icon:
-                          Icon(Icons.settings, color: Colors.black, size: 25.0),
+                      icon: SvgPicture.asset(
+                        'assets/icons/gear.svg',
+                        width: 23.0,
+                        height: 23.0,
+                        color: Colors.black,
+                      ),
                       onPressed: () {
                         Navigator.pushNamed(context, Routes.settings);
                       },
