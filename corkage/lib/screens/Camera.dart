@@ -151,17 +151,23 @@ class CameraAppState extends State<CameraApp> {
                         const response = ${json.encode(jsonData)};
                         const wineName = response.ocr_result.wine_info.ProductName;
                         const wineNameElement = document.getElementById('wineName');
-                        const wineDescription = response.ocr_result.wine_info.ProductDescription;
+                        const wineDescription = response.ocr_result.wine_info.description;
                         const wineDescriptionElement = document.getElementById('wineDescription');
                         const winePrice = response.ocr_result.wine_info.Priceinformation;
                         const winePriceElement = document.getElementById('winePrice');
-                        const wineAlcohol = response.ocr_result.wine_info.Alcohol;
+                        const wineAlcohol = response.ocr_result.wine_info.alcohol;
                         const wineAlcoholElement = document.getElementById('wineAlcohol');
+                        const wineBody = response.ocr_result.wine_info.Body;
+                        const wineBodyElement = document.getElementById('wineBody');
+                        const wineSweetness = response.ocr_result.wine_info.Sweetness;
+                        const wineSweetnessElement = document.getElementById('wineSweetness');
                         if (wineNameElement) {
                           wineNameElement.innerHTML = wineName;
                           wineDescriptionElement.innerHTML = wineDescription;
                           winePriceElement.innerHTML = winePrice;
                           wineAlcoholElement.innerHTML = wineAlcohol;
+                          wineBodyElement.innerHTML = wineBody;
+                          wineSweetnessElement.innerHTML = wineSweetness;
                         }
                       ''');
                     }
