@@ -28,7 +28,7 @@ class _FirstRunWebViewState extends State<FirstRunWebView> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: WebView(
-        initialUrl: 'https://cokage.store/taste-survey',
+        initialUrl: 'https://corkage.store/taste_survey',
         javascriptMode: JavascriptMode.unrestricted,
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
