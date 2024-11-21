@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:camera/camera.dart';
 import '/routes.dart';
 import 'Index.dart';
+import 'First.dart';
 
 class Login extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -122,8 +123,20 @@ class _LoginState extends State<Login> {
       print(
           'Login info saved: Token=${jsonData['token']}, UserId=${jsonData['user_id']}, Nickname=${jsonData['nickname']}');
 
-      // 로그인 성공 후 index 페이지로 이동
-      Navigator.of(context).pushReplacementNamed('/index');
+      // 첫 실행 여부 확인
+      bool isFirstRun = prefs.getBool('isFirstRun') ?? true;
+
+      if (isFirstRun) {
+        // 첫 실행이면 First.dart로 이동
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => FirstRunWebView(),
+          ),
+        );
+      } else {
+        // 첫 실행이 아니면 index 페이지로 이동
+        Navigator.of(context).pushReplacementNamed('/index');
+      }
     } catch (e) {
       print('Error saving login info: $e');
     }
